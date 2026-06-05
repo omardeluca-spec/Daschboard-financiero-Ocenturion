@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard Financiero — Omar Centurión 2026</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Tai+Tham&family=Nunito:wght@300;400;500;600;700&display=swap');
+:root{
+  --bg:#1c1f26;--surface:#242830;--surface2:#2c3040;--border:#353a4a;--border2:#404660;
+  --text:#dde1ec;--muted:#7a8099;--dim:#4a5068;
+  --green:#4caf82;--red:#e05c5c;--amber:#d4924a;--blue:#5b8dd9;--purple:#8b7fd4;--teal:#4aafaa;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'Nunito',sans-serif;font-size:15px;min-height:100vh;line-height:1.6;}
+.sidebar{position:fixed;top:0;left:0;bottom:0;width:240px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:28px 0 20px;z-index:100;overflow-y:auto;}
+.main{margin-left:240px;padding:36px 40px;min-height:100vh;}
+.brand{padding:0 22px 24px;border-bottom:1px solid var(--border);margin-bottom:16px;}
+.brand-name{font-family:'Noto Sans Tai Tham','Nunito',sans-serif;font-size:17px;font-weight:700;color:var(--text);}
+.brand-sub{font-size:12px;color:var(--muted);margin-top:4px;}
+.nav-sec{font-size:11px;font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:1.5px;padding:12px 22px 6px;}
+.nav-item{display:flex;align-items:center;gap:11px;padding:11px 22px;font-size:14px;font-weight:500;color:var(--muted);cursor:pointer;border-left:3px solid transparent;transition:all .15s;user-select:none;}
+.nav-item:hover{color:var(--text);background:var(--surface2);}
+.nav-item.active{color:var(--text);border-left-color:var(--blue);background:rgba(91,141,217,.08);}
+.nav-item .ni{font-size:16px;width:20px;text-align:center;}
+.sidebar-footer{margin-top:auto;padding:16px 22px 0;border-top:1px solid var(--border);font-size:12px;color:var(--dim);line-height:1.8;}
+.panel{display:none;}.panel.active{display:block;}
+.page-hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:28px;padding-bottom:20px;border-bottom:1px solid var(--border);}
+.page-title{font-family:'Noto Sans Tai Tham','Nunito',sans-serif;font-size:24px;font-weight:700;color:var(--text);}
+.page-sub{font-size:14px;color:var(--muted);margin-top:5px;}
+.badge{font-size:13px;color:var(--muted);background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:6px 14px;}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:22px;}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:22px;}
+.g2{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-bottom:22px;}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px 22px;}
+.kpi-lbl{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:1.1px;margin-bottom:9px;}
+.kpi-val{font-family:'Noto Sans Tai Tham','Nunito',sans-serif;font-size:24px;font-weight:700;color:var(--text);line-height:1;}
+.kpi-val.g{color:var(--green);}.kpi-val.r{color:var(--red);}.kpi-val.a{color:var(--amber);}.kpi-val.b{color:var(--blue);}.kpi-val.p{color:var(--purple);}
+.kpi-sub{font-size:13px;color:var(--muted);margin-top:6px;}
+.kpi-note{font-size:13px;margin-top:4px;}
+.kpi-note.up{color:var(--green);}.kpi-note.dn{color:var(--red);}.kpi-note.wn{color:var(--amber);}
+.sec{font-size:11px;font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:1.8px;margin-bottom:14px;padding-bottom:9px;border-bottom:1px solid var(--border);}
+.tw{border-radius:8px;border:1px solid var(--border);overflow:hidden;margin-bottom:22px;}
+.tw.sc{max-height:380px;overflow-y:auto;}
+.tw.sc::-webkit-scrollbar{width:4px;}.tw.sc::-webkit-scrollbar-track{background:var(--surface);}.tw.sc::-webkit-scrollbar-thumb{background:var(--border2);}
+table{width:100%;border-collapse:collapse;font-size:14px;}
+th{background:var(--surface2);text-align:left;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;padding:11px 15px;border-bottom:1px solid var(--border);}
+td{padding:11px 15px;border-bottom:1px solid var(--border);color:var(--text);}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:var(--surface2);}
+.tr-tot td{background:var(--surface2);font-weight:600;border-top:1px solid var(--border2);}
+.pos{color:var(--green);font-weight:600;}.neg{color:var(--red);font-weight:600;}.wrn{color:var(--amber);font-weight:600;}.blu{color:var(--blue);font-weight:500;}.dim{color:var(--dim);}
+.tag{display:inline-block;padding:3px 9px;border-radius:4px;font-size:11px;font-weight:600;}
+.tr{background:rgba(224,92,92,.15);color:#e05c5c;}.tg{background:rgba(76,175,130,.15);color:#4caf82;}.tb{background:rgba(91,141,217,.15);color:#5b8dd9;}.ta{background:rgba(212,146,74,.15);color:#d4924a;}.tp{background:rgba(139,127,212,.15);color:#8b7fd4;}.td{background:rgba(122,128,153,.12);color:#7a8099;}
+.hbar-row{display:flex;align-items:center;gap:12px;margin-bottom:10px;}
+.hbar-lbl{width:130px;font-size:13px;color:var(--muted);text-align:right;flex-shrink:0;}
+.hbar-track{flex:1;height:20px;background:var(--surface2);border-radius:3px;overflow:hidden;}
+.hbar-fill{height:100%;border-radius:3px;display:flex;align-items:center;padding-left:9px;}
+.hbar-fill span{font-size:11px;font-weight:600;color:rgba(255,255,255,.85);white-space:nowrap;}
+.loan{background:var(--surface);border:1px solid var(--border);border-left:4px solid var(--border2);border-radius:8px;padding:16px 18px;margin-bottom:11px;}
+.loan.ur{border-left-color:var(--red);}.loan.wn{border-left-color:var(--amber);}.loan.ok{border-left-color:var(--green);}
+.loan-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:5px;}
+.loan-name{font-family:'Noto Sans Tai Tham','Nunito',sans-serif;font-size:15px;font-weight:700;color:var(--text);}
+.loan-bank{font-size:12px;color:var(--muted);margin-top:3px;}
+.loan-amt{font-family:'Noto Sans Tai Tham','Nunito',sans-serif;font-size:17px;font-weight:700;color:var(--amber);text-align:right;}
+.loan-unit{font-size:12px;color:var(--muted);text-align:right;}
+.loan-info{font-size:13px;color:var(--muted);margin-bottom:8px;}
+.prog{height:4px;background:var(--border2);border-radius:2px;overflow:hidden;}
+.prog-fill{height:100%;border-radius:2px;background:var(--blue);}
+.al{display:flex;gap:11px;align-items:flex-start;border-radius:8px;padding:13px 16px;margin-bottom:11px;font-size:14px;border:1px solid var(--border);}
+.al.dn{background:rgba(224,92,92,.07);border-color:rgba(224,92,92,.25);}
+.al.wn{background:rgba(212,146,74,.07);border-color:rgba(212,146,74,.25);}
+.al.in{background:rgba(91,141,217,.07);border-color:rgba(91,141,217,.25);}
+.al.ok{background:rgba(76,175,130,.07);border-color:rgba(76,175,130,.25);}
+.al-ico{font-size:15px;flex-shrink:0;margin-top:2px;}
+.al-body{color:var(--text);}
+.divider{height:1px;background:var(--border);margin:20px 0;}
+.cuota-item{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:15px 17px;margin-bottom:10px;}
+.cuota-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;}
+.cuota-name{font-size:14px;font-weight:600;color:var(--text);}
+.cuota-org{font-size:12px;color:var(--muted);}
+.cuota-val{font-family:'Noto Sans Tai Tham','Nunito',sans-serif;font-size:16px;font-weight:700;color:var(--amber);}
+.cuota-row{display:flex;align-items:center;gap:10px;margin-top:8px;}
+.cuota-bar{flex:1;height:4px;background:var(--border2);border-radius:2px;overflow:hidden;}
+.cuota-fill{height:100%;background:var(--purple);border-radius:2px;}
+.cuota-pct{font-size:12px;color:var(--muted);white-space:nowrap;}
+
+/* ═══ CHECKLIST ═══ */
+#panel-checklist .cl-month-tabs{display:flex;gap:7px;margin-bottom:22px;flex-wrap:wrap;}
+#panel-checklist .cl-tab{padding:8px 20px;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--muted);transition:all .15s;}
+#panel-checklist .cl-tab.active{background:var(--blue);color:#fff;border-color:var(--blue);}
+.cl-section{margin-bottom:26px;}
+.cl-section-title{font-size:12px;font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:1.8px;padding:11px 16px;border-bottom:1px solid var(--border);border-top:1px solid var(--border);background:var(--surface2);border-radius:6px 6px 0 0;}
+.cl-item{display:flex;align-items:center;gap:14px;padding:14px 16px;border-bottom:1px solid var(--border);background:var(--surface);cursor:pointer;transition:background .12s;user-select:none;}
+.cl-item:last-child{border-bottom:none;border-radius:0 0 6px 6px;}
+.cl-item:hover{background:var(--surface2);}
+.cl-item.done{opacity:.55;}
+.cl-item.done .cl-concept{text-decoration:line-through;color:var(--muted);}
+.cl-cb{width:24px;height:24px;border:2px solid var(--border2);border-radius:5px;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s;background:transparent;}
+.cl-item.done .cl-cb{background:var(--green);border-color:var(--green);}
+.cl-check{color:#fff;font-size:14px;font-weight:700;display:none;}
+.cl-item.done .cl-check{display:block;}
+.cl-concept{flex:1;font-size:15px;font-weight:500;}
+.cl-detail{font-size:12px;color:var(--muted);}
+.cl-amt{font-family:'Noto Sans Tai Tham','Nunito',sans-serif;font-size:16px;font-weight:700;min-width:130px;text-align:right;}
+.cl-urgent{font-size:11px;font-weight:700;padding:3px 8px;border-radius:4px;background:rgba(224,92,92,.2);color:#e05c5c;margin-left:6px;flex-shrink:0;}
+.cl-warn-tag{font-size:11px;font-weight:700;padding:3px 8px;border-radius:4px;background:rgba(212,146,74,.2);color:#d4924a;margin-left:6px;flex-shrink:0;}
+.cl-ok-tag{font-size:11px;font-weight:700;padding:3px 8px;border-radius:4px;background:rgba(76,175,130,.2);color:#4caf82;margin-left:6px;flex-shrink:0;}
+
+.cl-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px;}
+.cl-sum-card{background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:18px 20px;}
+.cl-sum-lbl{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:7px;}
+.cl-sum-val{font-family:'Noto Sans Tai Tham','Nunito',sans-serif;font-size:22px;font-weight:700;}
+.cl-progress-bar{height:7px;background:var(--border2);border-radius:3px;overflow:hidden;margin-top:10px;}
+.cl-progress-fill{height:100%;background:var(--green);border-radius:3px;transition:width .3s;}
+</style>
+</head>
+<body>
+
+<nav class="sidebar">
+  <div class="brand">
+    <div class="brand-name">CENTURIÓN</div>
+    <div class="brand-sub">ANÍBAL OMAR · 20-23205886-3</div>
+  </div>
+
+  <div class="nav-sec">Principal</div>
+  <div class="nav-item active" onclick="go('resumen',this)"><span class="ni">▦</span>Resumen</div>
+  <div class="nav-item" onclick="go('ingresos',this)"><span class="ni">↑</span>Ingresos</div>
+
+  <div class="nav-sec">Gastos</div>
+  <div class="nav-item" onclick="go('vivienda',this)"><span class="ni">⌂</span>Vivienda</div>
+  <div class="nav-item" onclick="go('servicios',this)"><span class="ni">⚡</span>Servicios</div>
+  <div class="nav-item" onclick="go('alimentacion',this)"><span class="ni">🛒</span>Alimentación</div>
+  <div class="nav-item" onclick="go('transporte',this)"><span class="ni">⛽</span>Transporte</div>
+  <div class="nav-item" onclick="go('entreten',this)"><span class="ni">🎾</span>Entretenimiento</div>
+
+  <div class="nav-sec">Finanzas</div>
+  <div class="nav-item" onclick="go('checklist',this)"><span class="ni">✓</span>Pagos del Mes</div>
+  <div class="nav-item" onclick="go('cuotas',this)"><span class="ni">📅</span>Cuotas & Deudas</div>
+  <div class="nav-item" onclick="go('mp_cuotas',this)"><span class="ni">🛍</span>Cuotas MP</div>
+  <div class="nav-item" onclick="go('inversion',this)"><span class="ni">💹</span>Inversión</div>
+  <div class="nav-item" onclick="go('familia',this)"><span class="ni">👨‍👩‍👧‍👦</span>Familia</div>
+  <div class="nav-item" onclick="go('alertas',this)"><span class="ni">⚠</span>Alertas</div>
+
+  <div class="sidebar-footer">
+    Intercargo SAU · Ezeiza<br>
+    Período: Ene–Jun 2026<br>
+    Actualizado 02/06/2026
+  </div>
+</nav>
+
+<main class="main">
+
+<!-- ═══════════ RESUMEN ═══════════ -->
+<div id="panel-resumen" class="panel active">
+  <div class="page-hdr">
+    <div><div class="page-title">Resumen General</div><div class="page-sub">Posición financiera consolidada · Junio 2026</div></div>
+    <div class="badge">02/06/2026</div>
+  </div>
+
+  <div class="g4">
+    <div class="card">
+      <div class="kpi-lbl">Ingresos junio (proyectados)</div>
+      <div class="kpi-val b">$3.851.699</div>
+      <div class="kpi-sub">Sueldo $2.650.049 + Plus $601.650 + Titi ~$300.000 + Miqueas ~$100.000 (est.)</div>
+    </div>
+    <div class="card">
+      <div class="kpi-lbl">Compromisos junio</div>
+      <div class="kpi-val r">$2.509.000</div>
+      <div class="kpi-sub">Deudas + tarjetas + préstamos + alquiler</div>
+    </div>
+    <div class="card">
+      <div class="kpi-lbl">Margen disponible</div>
+      <div class="kpi-val a">~$1.342.000</div>
+      <div class="kpi-sub">Antes de gastos corrientes, Metrogas y Edesur</div>
+    </div>
+    <div class="card">
+      <div class="kpi-lbl">Potencial ahorro junio</div>
+      <div class="kpi-val g">~$400.000</div>
+      <div class="kpi-note up">≈ 10.4% — ¡Meta 10% alcanzable este mes!</div>
+    </div>
+  </div>
+
+  <div class="sec">Sueldo mayo — evolución Intercargo 2026</div>
+  <div class="tw"><table>
+    <tr><th>Mes</th><th>Concepto</th><th>Bruto rem.</th><th>Neto acred.</th><th>Extras</th><th>Total al bolsillo</th></tr>
+    <tr><td>Enero</td><td>Haberes + Bono prod. 1°</td><td>$2.617.681</td><td class="pos">$2.209.419</td><td class="pos">+$150.000</td><td class="pos">$2.359.419</td></tr>
+    <tr><td>Febrero</td><td>Haberes + Bono prod. 2°</td><td>$2.617.681</td><td class="pos">$2.209.419</td><td class="pos">+$150.000</td><td class="pos">$2.359.419</td></tr>
+    <tr><td>Marzo</td><td>Haberes + Bono + Ajuste extras mar</td><td>$2.805.234</td><td class="pos">$2.339.461</td><td class="pos">+$150.000 +$155.986</td><td class="pos">$2.645.447</td></tr>
+    <tr><td>Abril</td><td>Haberes + Acta 04/2026 + Plus Vacacional</td><td>$3.012.875</td><td class="pos">$2.609.590</td><td class="pos">+$672.010 +$601.650</td><td class="pos">$3.883.250</td></tr>
+    <tr class="tr-tot"><td><strong>Mayo</strong></td><td>Haberes · 7hs50%+11hs100% · 1 feriado</td><td class="pos">$3.120.236</td><td class="pos"><strong>$2.650.049</strong></td><td class="dim">—</td><td class="pos"><strong>$2.650.049</strong></td></tr>
+  </table></div>
+
+  <div class="g2">
+    <div class="card">
+      <div class="sec">¿Por qué mayo fue tan alto? ($2.650.049)</div>
+      <div class="hbar-row"><div class="hbar-lbl">Sueldo base</div><div class="hbar-track"><div class="hbar-fill" style="width:58%;background:var(--blue)"><span>$1.540.075</span></div></div></div>
+      <div class="hbar-row"><div class="hbar-lbl">Antigüedad</div><div class="hbar-track"><div class="hbar-fill" style="width:26%;background:var(--purple)"><span>$677.633</span></div></div></div>
+      <div class="hbar-row"><div class="hbar-lbl">Extras 100% (11hs)</div><div class="hbar-track"><div class="hbar-fill" style="width:11%;background:var(--amber)"><span>$296.464</span></div></div></div>
+      <div class="hbar-row"><div class="hbar-lbl">Extras 50% (7hs)</div><div class="hbar-track"><div class="hbar-fill" style="width:5%;background:var(--amber)"><span>$141.494</span></div></div></div>
+      <div class="hbar-row"><div class="hbar-lbl">Asig. nov-2024</div><div class="hbar-track"><div class="hbar-fill" style="width:11%;background:var(--teal)"><span>$294.750</span></div></div></div>
+      <div class="divider"></div>
+      <div style="font-size:11px;color:var(--amber)">⚡ 18 horas extras en mayo explican $437.958 de ingreso adicional. Cada hora extra es dinero estratégico.</div>
+    </div>
+    <div class="card">
+      <div class="sec">Diagnóstico junio</div>
+      <div class="al ok"><div class="al-ico">●</div><div class="al-body"><strong>Junio puede cerrar bien.</strong> El Plus Vacacional $601.650 + sueldo $2.650.049 + aportes familiares dan margen para pagar todo y ahorrar ~$400k.</div></div>
+      <div class="al wn"><div class="al-ico">●</div><div class="al-body"><strong>Metrogas: $75.608 de deuda total.</strong> Factura feb-mar vencida 08/05 impaga + factura mar-abr vence 02/06. Pagar ambas urgente para evitar corte.</div></div>
+      <div class="al wn"><div class="al-ico">●</div><div class="al-body"><strong>Edesur: $161.830 total (incl. saldo anterior $83.677).</strong> Vence 10/06. Con el saldo anterior incluido, no pagar implica corte de servicio.</div></div>
+      <div class="al ok"><div class="al-ico">●</div><div class="al-body"><strong>Plus Vacacional 2025: $601.650 acreditado.</strong> Usar estratégicamente para cancelar adelanto de sueldo y regularizar deudas de servicios.</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ INGRESOS ═══════════ -->
+<div id="panel-ingresos" class="panel">
+  <div class="page-hdr"><div><div class="page-title">Ingresos</div><div class="page-sub">Recibos completos Intercargo SAU + aportes familiares</div></div></div>
+
+  <div class="sec">Recibo mayo 2026 — detalle completo</div>
+  <div class="tw"><table>
+    <tr><th>Código</th><th>Concepto</th><th>Remunerativo</th><th>No Remun.</th><th>Descuento</th></tr>
+    <tr><td>2010</td><td>Sueldo básico</td><td class="pos">$1.540.074,92</td><td></td><td></td></tr>
+    <tr><td>2020</td><td>Antigüedad reconocida</td><td class="pos">$677.632,96</td><td></td><td></td></tr>
+    <tr><td>2040</td><td>Dedicación funcional</td><td class="pos">$154.007,49</td><td></td><td></td></tr>
+    <tr><td>2114</td><td>Días no trabajados</td><td class="neg">-$79.057,18</td><td></td><td></td></tr>
+    <tr><td>2140</td><td>Feriado (1 día)</td><td class="pos">$15.811,44</td><td></td><td></td></tr>
+    <tr><td>2159</td><td>Días de trámite (1 día)</td><td class="pos">$79.057,18</td><td></td><td></td></tr>
+    <tr><td>2210</td><td>Horas extras 50% (7 hs)</td><td class="pos">$141.494,38</td><td></td><td></td></tr>
+    <tr><td>2220</td><td>Horas extras 100% (11 hs)</td><td class="pos">$296.464,42</td><td></td><td></td></tr>
+    <tr><td>2540</td><td>Asig. rem. acuerdo nov-2024</td><td class="pos">$294.750,48</td><td></td><td></td></tr>
+    <tr><td>3600</td><td>Asignación no remunerativa</td><td></td><td class="blu">$292.195,41</td><td></td></tr>
+    <tr><td>3700</td><td>Suma fija acuerdo 2017</td><td></td><td class="blu">$1.590,03</td><td></td></tr>
+    <tr><td>4010</td><td>Jubilación</td><td></td><td></td><td class="neg">-$343.225,97</td></tr>
+    <tr><td>4020</td><td>Ley 19032 (PAMI)</td><td></td><td></td><td class="neg">-$93.607,08</td></tr>
+    <tr><td>4050</td><td>Obra social OSPEA</td><td></td><td></td><td class="neg">-$79.606,57</td></tr>
+    <tr><td>4150</td><td>ANSSAL</td><td></td><td></td><td class="neg">-$14.048,22</td></tr>
+    <tr><td>4210</td><td>Sindicato UPSA</td><td></td><td></td><td class="neg">-$93.654,78</td></tr>
+    <tr><td>4300</td><td>Diferencia plan abierto OSPEA</td><td></td><td></td><td class="neg">-$86.000,00</td></tr>
+    <tr><td>6982</td><td>Retención imp. ganancias</td><td></td><td></td><td class="neg">-$53.830,84</td></tr>
+    <tr class="tr-tot"><td colspan="2"><strong>TOTALES</strong></td><td class="pos"><strong>$3.120.236,09</strong></td><td class="blu"><strong>$293.786,37</strong></td><td class="neg"><strong>-$763.973,46</strong></td></tr>
+    <tr class="tr-tot"><td colspan="4"><strong>NETO ACREDITADO MAYO</strong></td><td class="pos" style="font-size:15px"><strong>$2.650.049</strong></td></tr>
+  </table></div>
+
+  <div class="sec">Liquidaciones adicionales 2026</div>
+  <div class="g2">
+    <div class="card">
+      <div class="kpi-lbl">Plus Vacacional 2025 — acreditado 11/05/2026</div>
+      <div class="kpi-val g">$601.650</div>
+      <div class="kpi-sub">Bruto: $752.062,40 · Descuentos: $150.412,47</div>
+      <div style="margin-top:10px;font-size:11px;color:var(--muted)">Jubil. $82.727 · PAMI $22.562 · OSPEA $19.178 · ANSSAL $3.384 · UPSA $22.562</div>
+    </div>
+    <div class="card">
+      <div class="kpi-lbl">Ajuste horas extras marzo 2026 — acreditado 09/04/2026</div>
+      <div class="kpi-val g">$155.986</div>
+      <div class="kpi-sub">9 hs extras 100%: $215.669,78 · Descuentos: $59.684,40</div>
+      <div style="margin-top:10px;font-size:11px;color:var(--amber)">⚠ Incluyó retención ganancias $16.550</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ CHECKLIST PAGOS ═══════════ -->
+<div id="panel-checklist" class="panel">
+  <div class="page-hdr">
+    <div><div class="page-title">Pagos del Mes</div><div class="page-sub">Tildá cada pago a medida que lo realizás — se guarda automáticamente</div></div>
+    <div class="badge" id="cl-date-badge">Junio 2026</div>
+  </div>
+
+  <div class="cl-month-tabs">
+    <button class="cl-tab active" onclick="clSetMonth('jun')">Junio 2026</button>
+    <button class="cl-tab" onclick="clSetMonth('jul')">Julio 2026</button>
+  </div>
+
+  <div class="cl-summary">
+    <div class="cl-sum-card">
+      <div class="cl-sum-lbl">Total a pagar</div>
+      <div class="cl-sum-val neg" id="cl-total">$0</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:3px">Compromisos del mes</div>
+    </div>
+    <div class="cl-sum-card">
+      <div class="cl-sum-lbl">Ya pagado</div>
+      <div class="cl-sum-val pos" id="cl-paid">$0</div>
+      <div class="cl-progress-bar"><div class="cl-progress-fill" id="cl-prog" style="width:0%"></div></div>
+    </div>
+    <div class="cl-sum-card">
+      <div class="cl-sum-lbl">Pendiente</div>
+      <div class="cl-sum-val wrn" id="cl-pending">$0</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:3px" id="cl-pct">0% completado</div>
+    </div>
+  </div>
+
+  <div id="cl-list"></div>
+</div>
+
+<!-- ═══════════ VIVIENDA ═══════════ -->
+<div id="panel-vivienda" class="panel">
+  <div class="page-hdr"><div><div class="page-title">Vivienda</div><div class="page-sub">Alquiler + expensas · Villa del Parque</div></div></div>
+  <div class="g3">
+    <div class="card"><div class="kpi-lbl">Alquiler</div><div class="kpi-val r">$600.000</div><div class="kpi-sub">Fijo desde ene-2026 · pago ~día 15</div><div class="kpi-note dn">25.6% del sueldo neto base</div></div>
+    <div class="card"><div class="kpi-lbl">Expensas mayo</div><div class="kpi-val a">$305.000</div><div class="kpi-sub">Variable · abril fue $400.000</div></div>
+    <div class="card"><div class="kpi-lbl">Vivienda total</div><div class="kpi-val r">~$905.000</div><div class="kpi-note dn">40.5% del sueldo · límite sano 30%</div></div>
+  </div>
+  <div class="tw"><table>
+    <tr><th>Concepto</th><th>Ene</th><th>Feb</th><th>Mar</th><th>Abr</th><th>May</th><th>Jun</th></tr>
+    <tr><td>Alquiler</td><td class="neg">$600k</td><td class="neg">$600k</td><td class="neg">$600k</td><td class="neg">$600k</td><td class="neg">$600k</td><td class="neg">$600k</td></tr>
+    <tr><td>Expensas</td><td class="dim">n/d</td><td class="dim">n/d</td><td class="dim">n/d</td><td class="neg">$400k</td><td class="neg">$305k</td><td class="wrn">pend.</td></tr>
+    <tr class="tr-tot"><td><strong>Total</strong></td><td class="neg">$600k+</td><td class="neg">$600k+</td><td class="neg">$600k+</td><td class="neg">$1.000k</td><td class="neg">$905k</td><td class="wrn">est. $950k</td></tr>
+  </table></div>
+</div>
+
+<!-- ═══════════ SERVICIOS ═══════════ -->
+<div id="panel-servicios" class="panel">
+  <div class="page-hdr"><div><div class="page-title">Servicios</div><div class="page-sub">Luz, gas, internet, celulares</div></div></div>
+  <div class="g4">
+    <div class="card"><div class="kpi-lbl">Edesur — junio</div><div class="kpi-val r">$161.831</div><div class="kpi-sub">Incl. deuda anterior $83.677<br>Vence 10/06/2026 · 459 kWh</div><div class="kpi-note dn">⚠ Aviso de suspensión activo</div></div>
+    <div class="card"><div class="kpi-lbl">Metrogas — deuda total</div><div class="kpi-val r">$75.609</div><div class="kpi-sub">Fact. 1: $43.013 (VENCIDA 08/05)<br>Fact. 2: $32.596 (vence 02/06)</div><div class="kpi-note dn">⚠ Riesgo de corte inminente</div></div>
+    <div class="card"><div class="kpi-lbl">Movistar (2 líneas)</div><div class="kpi-val a">$37.485/mes</div><div class="kpi-sub">011 2706-5089 + 011 4065-3737<br>$18.742,50 c/u · cierre 02/05</div></div>
+    <div class="card"><div class="kpi-lbl">Telecentro (internet)</div><div class="kpi-val a">$27.757/mes</div><div class="kpi-sub">Vía Visa Galicia · 22/05</div></div>
+  </div>
+
+  <div class="sec">Edesur — factura junio 2026 (desglose)</div>
+  <div class="tw"><table>
+    <tr><th>Concepto</th><th>Importe</th></tr>
+    <tr><td>Cargo fijo</td><td>$10.132,46</td></tr>
+    <tr><td>Cargo variable hasta tope (255 kWh)</td><td>$21.843,55</td></tr>
+    <tr><td>Cargo variable sobre tope (191 kWh)</td><td>$29.284,07</td></tr>
+    <tr><td>IVA 21%</td><td>$12.900,85</td></tr>
+    <tr><td>Contrib. Art. 34</td><td>$3.921,24</td></tr>
+    <tr><td>Bonif. interrupciones</td><td class="pos">-$100,80</td></tr>
+    <tr><td>Total período actual</td><td>$78.153,91</td></tr>
+    <tr><td><strong>Saldo anterior impago</strong></td><td class="neg"><strong>$83.676,93</strong></td></tr>
+    <tr class="tr-tot"><td><strong>TOTAL 1° vencimiento (10/06)</strong></td><td class="neg"><strong>$161.830,84</strong></td></tr>
+    <tr><td>Con recargo 2° vencimiento (16/06)</td><td class="wrn">$162.272,03</td></tr>
+  </table></div>
+
+  <div class="sec">Metrogas — facturas impagas</div>
+  <div class="tw"><table>
+    <tr><th>Período</th><th>Emisión</th><th>Vencimiento</th><th>Consumo</th><th>Importe</th><th>Estado</th></tr>
+    <tr><td>21/02/26 al 23/03/26</td><td>27/04/2026</td><td>08/05/2026</td><td>46 m³</td><td class="neg">$43.012,93</td><td><span class="tag tr">VENCIDA</span></td></tr>
+    <tr><td>24/03/26 al 22/04/26</td><td>22/05/2026</td><td>02/06/2026</td><td>45 m³</td><td class="neg">$32.595,92</td><td><span class="tag ta">Por vencer</span></td></tr>
+    <tr class="tr-tot"><td colspan="4"><strong>Deuda total Metrogas</strong></td><td class="neg"><strong>$75.608,85</strong></td><td><span class="tag tr">URGENTE</span></td></tr>
+  </table></div>
+  <div class="al dn"><div class="al-ico">●</div><div class="al-body"><strong>¡Atención!</strong> La factura de Metrogas tiene aviso formal de corte de servicio. Titular del contrato es "Alberto Couto" (dueño del depto). Pagar antes del 05/06/2026 para evitar el corte.</div></div>
+</div>
+
+<!-- ═══════════ ALIMENTACIÓN ═══════════ -->
+<div id="panel-alimentacion" class="panel">
+  <div class="page-hdr"><div><div class="page-title">Alimentación</div><div class="page-sub">Supermercado, restaurantes, delivery · Mayo 2026</div></div></div>
+  <div class="g4">
+    <div class="card"><div class="kpi-lbl">Supermercado</div><div class="kpi-val a">$217.000</div><div class="kpi-sub">Chino Lozano, Super Huang, Cooperativa, Ramos, Carrefour (PYA)</div></div>
+    <div class="card"><div class="kpi-lbl">Restaurantes</div><div class="kpi-val a">$97.000</div><div class="kpi-sub">Estancias Don Miguel, Voy a la Granja, Bellagamba</div></div>
+    <div class="card"><div class="kpi-lbl">Delivery</div><div class="kpi-val a">$29.000</div><div class="kpi-sub">PedidosYa: helados, propinas, market</div></div>
+    <div class="card"><div class="kpi-lbl">Total alimentación</div><div class="kpi-val r">$343.000</div><div class="kpi-sub">13% del ingreso total del mes</div></div>
+  </div>
+  <div class="tw sc"><table>
+    <tr><th>Fecha</th><th>Comercio</th><th>Monto</th><th>Tipo</th></tr>
+    <tr><td>01/05</td><td>Chino Lozano (Pedro Lozano)</td><td class="neg">$36.450</td><td><span class="tag tb">Super</span></td></tr>
+    <tr><td>02/05</td><td>Helado PedidosYa</td><td class="neg">$13.700</td><td><span class="tag tp">Delivery</span></td></tr>
+    <tr><td>04/05</td><td>MP Heladería</td><td class="neg">$13.775</td><td><span class="tag tp">Delivery</span></td></tr>
+    <tr><td>04/05</td><td>MP Open 25hs</td><td class="neg">$6.200</td><td><span class="tag tb">Super</span></td></tr>
+    <tr><td>05/05</td><td>Voy a la Granja (salida familiar)</td><td class="neg">$35.631</td><td><span class="tag ta">Restaurante</span></td></tr>
+    <tr><td>05/05</td><td>Verdulería La Cooperativa</td><td class="neg">$12.650</td><td><span class="tag tb">Super</span></td></tr>
+    <tr><td>06/05</td><td>Bellagamba</td><td class="neg">$8.500</td><td><span class="tag ta">Restaurante</span></td></tr>
+    <tr><td>07/05</td><td>Super Ramos Mejía</td><td class="neg">$14.250</td><td><span class="tag tb">Super</span></td></tr>
+    <tr><td>07/05</td><td>Panadería Ramos</td><td class="neg">$6.000</td><td><span class="tag tb">Super</span></td></tr>
+    <tr><td>08/05</td><td>Super Huang (Chino)</td><td class="neg">$40.169</td><td><span class="tag tb">Super</span></td></tr>
+    <tr><td>11/05</td><td>Estancias Don Miguel</td><td class="neg">$15.000</td><td><span class="tag ta">Restaurante</span></td></tr>
+    <tr><td>11/05</td><td>Heladería PedidosYa</td><td class="neg">$15.000</td><td><span class="tag tp">Delivery</span></td></tr>
+    <tr><td>13/05</td><td>Voy a la Granja (2da salida)</td><td class="neg">$16.250</td><td><span class="tag ta">Restaurante</span></td></tr>
+    <tr><td>13/05</td><td>Verdulería La Cooperativa</td><td class="neg">$6.340</td><td><span class="tag tb">Super</span></td></tr>
+    <tr><td>25/05</td><td>Estancias Don Miguel (Visa)</td><td class="neg">$37.335</td><td><span class="tag ta">Restaurante</span></td></tr>
+    <tr><td>25/05</td><td>PedidosYa Carrefour (Visa)</td><td class="neg">$26.631</td><td><span class="tag tb">Super</span></td></tr>
+    <tr><td>25/05</td><td>PedidosYa propina</td><td class="neg">$800</td><td><span class="tag tp">Delivery</span></td></tr>
+    <tr class="tr-tot"><td colspan="2"><strong>TOTAL</strong></td><td class="neg"><strong>~$343.000</strong></td><td></td></tr>
+  </table></div>
+</div>
+
+<!-- ═══════════ TRANSPORTE ═══════════ -->
+<div id="panel-transporte" class="panel">
+  <div class="page-hdr"><div><div class="page-title">Transporte</div><div class="page-sub">Combustible, SUBE, taller mecánico</div></div></div>
+  <div class="g3">
+    <div class="card"><div class="kpi-lbl">Combustible</div><div class="kpi-val a">$54.100</div><div class="kpi-sub">2 cargas: $10k (07/05) + Repsol $44.100 (19/05)</div></div>
+    <div class="card"><div class="kpi-lbl">SUBE mayo</div><div class="kpi-val a">$13.736</div><div class="kpi-sub">6 cargas registradas en mayo</div></div>
+    <div class="card"><div class="kpi-lbl">Taller Moriconi</div><div class="kpi-val r">$288.873</div><div class="kpi-sub">19/05 · vía Columbia · no recurrente</div><div class="kpi-note wn">Gasto puntual del mes</div></div>
+  </div>
+</div>
+
+<!-- ═══════════ ENTRETENIMIENTO ═══════════ -->
+<div id="panel-entreten" class="panel">
+  <div class="page-hdr"><div><div class="page-title">Entretenimiento & Ocio</div><div class="page-sub">Tenis, salidas, suscripciones</div></div></div>
+  <div class="g3">
+    <div class="card"><div class="kpi-lbl">Tenis (FNCS)</div><div class="kpi-val a">$14.000</div><div class="kpi-sub">08/05 · cuota mensual de club</div></div>
+    <div class="card"><div class="kpi-lbl">Suscripciones</div><div class="kpi-val a">$10.550</div><div class="kpi-sub">Meli $3.490 + YouTube $7.060 (USD 4.97)</div></div>
+    <div class="card"><div class="kpi-lbl">Libros / Útiles</div><div class="kpi-val a">$7.800</div><div class="kpi-sub">Librería Triskel · 11/05</div></div>
+  </div>
+</div>
+
+<!-- ═══════════ CUOTAS & DEUDAS ═══════════ -->
+<div id="panel-cuotas" class="panel">
+  <div class="page-hdr"><div><div class="page-title">Cuotas & Préstamos</div><div class="page-sub">Galicia + Naranja Digital + cuotas diferidas</div></div></div>
+  <div class="loan ur">
+    <div class="loan-head"><div><div class="loan-name">Adelanto de Sueldo — Galicia</div><div class="loan-bank">#808132488771 · tomado 15/05</div></div><div><div class="loan-amt">$231.186</div><div class="loan-unit">pago único · vence 10/06</div></div></div>
+    <div class="loan-info">Capital $220.000 · tasa alta · prioridad máxima de cancelación</div>
+    <div class="prog"><div class="prog-fill" style="width:0%;background:var(--red)"></div></div>
+  </div>
+  <div class="loan wn">
+    <div class="loan-head"><div><div class="loan-name">Plata al Toque — Galicia</div><div class="loan-bank">#808132726257 · tomado 18/05</div></div><div><div class="loan-amt">$146.223</div><div class="loan-unit">pago único · vence 01/07</div></div></div>
+    <div class="loan-info">Capital $135.000 · siguiente prioridad</div>
+    <div class="prog"><div class="prog-fill" style="width:0%;background:var(--amber)"></div></div>
+  </div>
+  <div class="loan">
+    <div class="loan-head"><div><div class="loan-name">Préstamo Personal — Galicia</div><div class="loan-bank">#808086320352</div></div><div><div class="loan-amt">$250.063</div><div class="loan-unit">/mes · vence 04/06</div></div></div>
+    <div class="loan-info">Cuota 16/48 · Capital original $3.500.000 · Termina jul-2029</div>
+    <div class="prog"><div class="prog-fill" style="width:33%"></div></div>
+  </div>
+  <div class="loan">
+    <div class="loan-head"><div><div class="loan-name">Préstamo UVA — Galicia</div><div class="loan-bank">1.039,96 UVAs · valor UVA $1.980,92</div></div><div><div class="loan-amt">$110.174</div><div class="loan-unit">/mes · vence 08/06</div></div></div>
+    <div class="loan-info">Cuota 11/24 · Ajusta por CER · Termina dic-2027</div>
+    <div class="prog"><div class="prog-fill" style="width:46%;background:var(--amber)"></div></div>
+  </div>
+  <div class="loan">
+    <div class="loan-head"><div><div class="loan-name">Préstamo Naranja Digital</div><div class="loan-bank">Otorgado 14/03/2026</div></div><div><div class="loan-amt">~$32.343</div><div class="loan-unit">/mes · vence 10/06</div></div></div>
+    <div class="loan-info">Cuota 4/9 · Pagado $62.326 · Resta $225.960</div>
+    <div class="prog"><div class="prog-fill" style="width:33%;background:var(--purple)"></div></div>
+  </div>
+
+  <div class="sec" style="margin-top:6px">Cuotas diferidas en tarjetas</div>
+  <div class="cuota-item"><div class="cuota-head"><div><div class="cuota-name">ANSWER5 Seg. 1 + Seg. 2 — MC Galicia</div><div class="cuota-org">Débitos automáticos · 26 de cada mes · ¿Seguro?</div></div><div class="cuota-val">$138.421/mes</div></div><div style="font-size:11px;color:var(--amber)">⚠ $17.126 + $121.295 — verificar qué cubre antes de que termine ago-2026</div><div class="cuota-row"><div class="cuota-bar"><div class="cuota-fill" style="width:83%"></div></div><div class="cuota-pct">10/12 — termina ago-2026</div></div></div>
+  <div class="cuota-item"><div class="cuota-head"><div><div class="cuota-name">Plan SDO. Cuotif. TNA 79.2% — MC Galicia</div><div class="cuota-org">20/08/2025 · 12 cuotas con interés</div></div><div class="cuota-val">$46.038/mes</div></div><div style="font-size:11px;color:var(--muted)">Cuota 11/12 · jun $46.038 · jul $46.038 · termina jul-2026</div><div class="cuota-row"><div class="cuota-bar"><div class="cuota-fill" style="width:92%;background:var(--blue)"></div></div><div class="cuota-pct">11/12 — 1 cuota restante</div></div></div>
+  <div class="cuota-item"><div class="cuota-head"><div><div class="cuota-name">Visa Plan V TNA 94.59%</div><div class="cuota-org">28/01/2026 · 8 cuotas</div></div><div class="cuota-val">$87.616 jun · $70.672 jul-ago</div></div><div style="font-size:11px;color:var(--muted)">Cuota 6/8 · Termina ago-2026</div><div class="cuota-row"><div class="cuota-bar"><div class="cuota-fill" style="width:75%;background:var(--blue)"></div></div><div class="cuota-pct">6/8 — 2 cuotas restantes</div></div></div>
+  <div class="cuota-item"><div class="cuota-head"><div><div class="cuota-name">Seguro Auto La Caja — Naranja</div><div class="cuota-org">Débito automático mensual</div></div><div class="cuota-val">$22.067/mes</div></div><div style="font-size:11px;color:var(--muted)">Renovación anual automática · Recurrente</div><div class="cuota-row"><div class="cuota-bar"><div class="cuota-fill" style="width:100%;background:var(--green)"></div></div><div class="cuota-pct">Vigente</div></div></div>
+</div>
+
+<!-- ═══════════ MP CUOTAS ═══════════ -->
+<div id="panel-mp_cuotas" class="panel">
+  <div class="page-hdr"><div><div class="page-title">Cuotas Mercado Pago</div><div class="page-sub">Compromisos financiados registrados en tu Excel</div></div></div>
+  <div class="tw"><table>
+    <tr><th>Concepto</th><th>Mar</th><th>Abr</th><th>May</th><th>Jun</th><th>Jul</th><th>Ago</th><th>Sep</th></tr>
+    <tr><td>Préstamo $740k (deudas Titi)</td><td class="neg">$101.508</td><td class="neg">$101.508</td><td class="neg">$101.508</td><td class="neg">$101.508</td><td class="dim">—</td><td class="dim">—</td><td class="dim">—</td></tr>
+    <tr><td>Bici Zion</td><td class="neg">$74.312</td><td class="neg">$74.312</td><td class="neg">$74.312</td><td class="neg">$74.312</td><td class="neg">$74.312</td><td class="dim">—</td><td class="dim">—</td></tr>
+    <tr><td>Xiaomi Redmi (Miqueas)</td><td class="neg">$48.333</td><td class="neg">$48.333</td><td class="neg">$48.333</td><td class="neg">$48.333</td><td class="neg">$48.333</td><td class="neg">$48.333</td><td class="dim">—</td></tr>
+    <tr><td>Préstamo $500k mecánico Moriconi</td><td class="neg">$104.666</td><td class="neg">$104.666</td><td class="neg">$104.666</td><td class="neg">$104.666</td><td class="neg">$104.666</td><td class="neg">$104.666</td><td class="dim">—</td></tr>
+    <tr><td>Préstamo $110k</td><td class="dim">—</td><td class="neg">$43.185</td><td class="neg">$43.185</td><td class="neg">$43.185</td><td class="dim">—</td><td class="dim">—</td><td class="dim">—</td></tr>
+    <tr><td>Cafetera expresso</td><td class="dim">—</td><td class="neg">$50.541</td><td class="neg">$50.541</td><td class="neg">$50.541</td><td class="neg">$50.541</td><td class="neg">$50.541</td><td class="neg">$50.541</td></tr>
+    <tr><td>Préstamo $80k</td><td class="dim">—</td><td class="neg">$17.020</td><td class="neg">$17.020</td><td class="neg">$17.020</td><td class="neg">$17.020</td><td class="neg">$17.020</td><td class="dim">—</td></tr>
+    <tr><td>Homo PAN Titi</td><td class="dim">—</td><td class="dim">—</td><td class="neg">$17.981</td><td class="neg">$17.981</td><td class="neg">$17.981</td><td class="neg">$17.981</td><td class="neg">$17.981</td></tr>
+    <tr class="tr-tot"><td><strong>TOTAL MP mes</strong></td><td class="neg"><strong>$328.819</strong></td><td class="neg"><strong>$439.565</strong></td><td class="neg"><strong>$457.546</strong></td><td class="neg"><strong>$457.546</strong></td><td class="neg"><strong>$312.853</strong></td><td class="neg"><strong>$238.541</strong></td><td class="neg"><strong>$68.522</strong></td></tr>
+  </table></div>
+  <div class="al in"><div class="al-ico">●</div><div class="al-body">A partir de <strong>septiembre 2026</strong> los pagos MP caen de $457k a $68k. Eso libera ~$389.000/mes para redirigir a ahorro. Marcar esa fecha en el calendario.</div></div>
+</div>
+
+<!-- ═══════════ INVERSIÓN ═══════════ -->
+<div id="panel-inversion" class="panel">
+  <div class="page-hdr"><div><div class="page-title">Inversión & Ahorro USD</div><div class="page-sub">Brubank · Cocos Capital · Fiwind</div></div></div>
+  <div class="g3">
+    <div class="card"><div class="kpi-lbl">Brubank SBS LATAM</div><div class="kpi-val g">USD 302,20</div><div class="kpi-sub">6.23% anual · rescate 24hs<br>~$429.000 ARS @ $1.420</div></div>
+    <div class="card"><div class="kpi-lbl">Cocos Capital USA</div><div class="kpi-val g">ARKK + SPY</div><div class="kpi-sub">4 acc. ARKK · 1 acc. SPY<br>+USD 100 recibidos may-2026</div></div>
+    <div class="card"><div class="kpi-lbl">Total invertido en USD</div><div class="kpi-val g">≈ USD 375</div><div class="kpi-sub">Brubank USD 302 + Cocos ~USD 73</div><div class="kpi-note up">Meta: USD 500 antes de dic-2026</div></div>
+  </div>
+  <div class="tw"><table>
+    <tr><th>Fecha</th><th>Operación</th><th>ARS</th><th>Cotización</th><th>USD</th></tr>
+    <tr><td>01/04/2026</td><td>Compra USD Galicia</td><td class="neg">$28.500</td><td>$1.425</td><td class="pos">USD 20</td></tr>
+    <tr><td>04/05/2026</td><td>Compra USD Galicia</td><td class="neg">$141.500</td><td>$1.415</td><td class="pos">USD 100</td></tr>
+    <tr><td>19/05/2026</td><td>Compra USD Galicia</td><td class="neg">$142.000</td><td>$1.420</td><td class="pos">USD 100</td></tr>
+    <tr class="tr-tot"><td colspan="2"><strong>Total dolarizado 2026</strong></td><td class="neg"><strong>$312.000</strong></td><td>Prom. $1.418</td><td class="pos"><strong>USD 220</strong></td></tr>
+  </table></div>
+</div>
+
+<!-- ═══════════ FAMILIA ═══════════ -->
+<div id="panel-familia" class="panel">
+  <div class="page-hdr"><div><div class="page-title">Economía Familiar</div><div class="page-sub">Aportes y gastos del hogar Centurión–Felizzola</div></div></div>
+  <div class="g3">
+    <div class="card"><div class="kpi-lbl">Titi — mayo</div><div class="kpi-val g">$287.000</div><div class="kpi-sub">5 transferencias · trabajo particular</div></div>
+    <div class="card"><div class="kpi-lbl">Miqueas — mayo</div><div class="kpi-val g">$120.000</div><div class="kpi-sub">Esporádico · registrado en Excel</div></div>
+    <div class="card"><div class="kpi-lbl">Movistar hijos</div><div class="kpi-val a">$37.485/mes</div><div class="kpi-sub">2 líneas One · $18.742 c/u</div></div>
+  </div>
+  <div class="al wn"><div class="al-ico">●</div><div class="al-body"><strong>Cooperadora Maitena (colegio estatal):</strong> pendiente de confirmación. Indicame monto y frecuencia para agregarlo.</div></div>
+</div>
+
+<!-- ═══════════ ALERTAS ═══════════ -->
+<div id="panel-alertas" class="panel">
+  <div class="page-hdr"><div><div class="page-title">Alertas & Recomendaciones</div><div class="page-sub">Situación al 02/06/2026</div></div></div>
+  <div class="sec">Críticas — actuar esta semana</div>
+  <div class="al dn"><div class="al-ico">●</div><div class="al-body"><strong>Metrogas $75.609 — aviso de corte.</strong> Factura feb-mar ($43.013) ya venció el 08/05. Factura mar-abr ($32.596) vence el 02/06/2026. Pagar hoy o mañana para evitar corte.</div></div>
+  <div class="al dn"><div class="al-ico">●</div><div class="al-body"><strong>Adelanto de sueldo $231.186 vence 10/06.</strong> Cancelar el día que acredite el sueldo de junio. No renovar bajo ningún concepto.</div></div>
+  <div class="al dn"><div class="al-ico">●</div><div class="al-body"><strong>Edesur $161.831 vence 10/06</strong> (incl. deuda anterior $83.677). También hay aviso de suspensión. Pagar junto con el adelanto la primera semana de junio.</div></div>
+  <div class="sec" style="margin-top:6px">Advertencias</div>
+  <div class="al wn"><div class="al-ico">●</div><div class="al-body"><strong>ANSWER5 MC Galicia: $138.421/mes.</strong> Termina agosto 2026. Verificar exactamente qué cubre — si es seguro de vida, evaluar si el monto es razonable.</div></div>
+  <div class="al wn"><div class="al-ico">●</div><div class="al-body"><strong>Patente y VTV adeudados.</strong> Consultar deuda en AGIP — plan de pagos disponible online. Cada mes que pasa suma multas.</div></div>
+  <div class="sec" style="margin-top:6px">Oportunidades junio</div>
+  <div class="al ok"><div class="al-ico">1</div><div class="al-body"><strong>Plus Vacacional $601.650 ya acreditado.</strong> Usar para: cancelar adelanto ($231k) + Metrogas ($75k) + parte de Edesur ($161k) = $467k. Sobran $134k para ahorro USD.</div></div>
+  <div class="al ok"><div class="al-ico">2</div><div class="al-body"><strong>Sueldo mayo fue el más alto de 2026: $2.650.049.</strong> Con 18 horas extras. Junio podría estar en ese rango si seguís con extras.</div></div>
+  <div class="al ok"><div class="al-ico">3</div><div class="al-body"><strong>Agosto/septiembre: punto de inflexión.</strong> Terminan ANSWER5 ($138k), Plan Cuotif ($46k), Visa Plan V ($70k) y cuotas MP caen $389k. Liberás más de $640k/mes. El ahorro del 20% será automático.</div></div>
+</div>
+
+</main>
+
+<script>
+// ═══ NAVEGACIÓN ═══
+function go(name, el) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+  el.classList.add('active');
+  if (name === 'checklist') renderChecklist();
+}
+
+// ═══ CHECKLIST DATA ═══
+const MONTHS = {
+  jun: {
+    label: 'Junio 2026',
+    sections: [
+      {
+        title: '🔴 URGENTE — Esta semana',
+        items: [
+          { id: 'jun_metrogas1', concept: 'Metrogas — Factura feb-mar (VENCIDA 08/05)', detail: 'Periodo 21/02–23/03 · 46m³', amount: 43013, urgent: true },
+          { id: 'jun_metrogas2', concept: 'Metrogas — Factura mar-abr (vence 02/06)', detail: 'Periodo 24/03–22/04 · 45m³', amount: 32596, urgent: true },
+        ]
+      },
+      {
+        title: '📅 Semana del 4 al 10 de junio',
+        items: [
+          { id: 'jun_prest_galicia', concept: 'Cuota préstamo personal Galicia (16/48)', detail: '#808086320352 · vence 04/06', amount: 250063, urgent: true },
+          { id: 'jun_visa', concept: 'Total Visa Galicia mayo', detail: 'Plan V + Telecentro + K Market + PYA + Estancias · vence 05/06', amount: 214915, warn: true },
+          { id: 'jun_mc', concept: 'Total MC Galicia mayo', detail: 'ANSWER5 + Plan Cuotif. · vence 05/06', amount: 186126, warn: true },
+          { id: 'jun_uva', concept: 'Cuota UVA Galicia (11/24)', detail: '56.92 UVAs · vence 08/06', amount: 110174 },
+          { id: 'jun_adelanto', concept: 'Adelanto de sueldo Galicia (CANCELAR)', detail: '#808132488771 · vence 10/06 · NO RENOVAR', amount: 231186, urgent: true },
+          { id: 'jun_naranja_prst', concept: 'Cuota 4/9 préstamo Naranja', detail: 'Naranja Digital · vence 10/06', amount: 32343 },
+          { id: 'jun_naranja_tarj', concept: 'Resumen Naranja tarjeta junio', detail: 'La Caja + SHOP GALLERY + SANTA ANA + Plan Turbo · vence 10/06', amount: 133196 },
+          { id: 'jun_edesur', concept: 'Edesur (incl. deuda anterior $83.677)', detail: '459 kWh · vence 10/06 · AVISO SUSPENSIÓN', amount: 161831, urgent: true },
+        ]
+      },
+      {
+        title: '🏠 Vivienda',
+        items: [
+          { id: 'jun_alquiler', concept: 'Alquiler junio', detail: 'Villa del Parque · pago ~día 15', amount: 600000 },
+          { id: 'jun_expensas', concept: 'Expensas junio', detail: 'Variable — completar cuando llegue la liquidación', amount: 350000, warn: true },
+        ]
+      },
+      {
+        title: '💳 Tarjeta Columbia (cierre mayo)',
+        items: [
+          { id: 'jun_columbia', concept: 'MC Columbia — total mayo', detail: 'Taller Moriconi + Carrefour + saldo ant. + intereses · vence 01/06', amount: 380571, urgent: true },
+        ]
+      },
+      {
+        title: '📱 Servicios recurrentes',
+        items: [
+          { id: 'jun_movistar', concept: 'Movistar 2 líneas', detail: '011 2706-5089 + 011 4065-3737 · $18.742 c/u', amount: 37485 },
+          { id: 'jun_telecentro', concept: 'Telecentro internet', detail: 'Vía Visa Galicia · ~22/06', amount: 27757 },
+          { id: 'jun_tenis', concept: 'Tenis / FNCS', detail: 'Cuota mensual del club', amount: 14000 },
+        ]
+      },
+      {
+        title: '🛍 Cuotas Mercado Pago',
+        items: [
+          { id: 'jun_mp_total', concept: 'Total cuotas MP junio', detail: 'Préstamo Titi + Bici + Redmi + Moriconi + Prest $110k + Cafetera + Prest $80k + Homo PAN', amount: 457546 },
+        ]
+      },
+      {
+        title: '💰 Deuda flotante · pagar cuando se pueda',
+        items: [
+          { id: 'jun_plata_toque', concept: 'Plata al Toque Galicia', detail: '#808132726257 · vence 01/07 — NO RENOVAR', amount: 146223, warn: true },
+        ]
+      }
+    ]
+  },
+  jul: {
+    label: 'Julio 2026',
+    sections: [
+      {
+        title: '📅 Compromisos fijos julio',
+        items: [
+          { id: 'jul_prest_galicia', concept: 'Cuota préstamo personal Galicia (17/48)', detail: 'Vence ~04/07', amount: 250063 },
+          { id: 'jul_uva', concept: 'Cuota UVA Galicia (12/24)', detail: 'Vence ~08/07 · ajustará según UVA', amount: 110174 },
+          { id: 'jul_plata_toque', concept: 'Plata al Toque Galicia (última!)', detail: 'Vence 01/07 · cancelar definitivamente', amount: 146223, urgent: true },
+          { id: 'jul_naranja_prst', concept: 'Cuota 5/9 préstamo Naranja', detail: 'Vence 10/07', amount: 32320 },
+          { id: 'jul_mc_cuotif', concept: 'MC Galicia — Plan Cuotif. última cuota', detail: 'Cuota 12/12 · ¡TERMINA!', amount: 46038 },
+          { id: 'jul_visa_planv', concept: 'Visa Plan V cuota 7/8', detail: 'Vence ~05/07', amount: 70672 },
+          { id: 'jul_answer5', concept: 'ANSWER5 MC Galicia', detail: 'Cuota 11/12 · penúltima', amount: 138421 },
+        ]
+      },
+      {
+        title: '🏠 Vivienda',
+        items: [
+          { id: 'jul_alquiler', concept: 'Alquiler julio', detail: 'Villa del Parque', amount: 600000 },
+          { id: 'jul_expensas', concept: 'Expensas julio', detail: 'Completar cuando llegue la liquidación', amount: 350000, warn: true },
+        ]
+      },
+      {
+        title: '🛍 Cuotas Mercado Pago',
+        items: [
+          { id: 'jul_mp_total', concept: 'Total cuotas MP julio', detail: 'Bici + Redmi + Moriconi + Cafetera + Prest $80k + Homo PAN', amount: 312853 },
+        ]
+      }
+    ]
+  }
+};
+
+let currentMonth = 'jun';
+const STATE_KEY = 'cl_state_omar_2026';
+
+function loadState() {
+  try { return JSON.parse(localStorage.getItem(STATE_KEY) || '{}'); } catch(e) { return {}; }
+}
+
+function saveState(state) {
+  try { localStorage.setItem(STATE_KEY, JSON.stringify(state)); } catch(e) {}
+}
+
+function clSetMonth(month) {
+  currentMonth = month;
+  document.querySelectorAll('.cl-tab').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('cl-date-badge').textContent = MONTHS[month].label;
+  renderChecklist();
+}
+
+function toggleItem(id) {
+  const state = loadState();
+  state[id] = !state[id];
+  saveState(state);
+  renderChecklist();
+}
+
+function renderChecklist() {
+  const state = loadState();
+  const data = MONTHS[currentMonth];
+  const listEl = document.getElementById('cl-list');
+
+  let totalAmt = 0, paidAmt = 0;
+  data.sections.forEach(s => s.items.forEach(item => {
+    totalAmt += item.amount;
+    if (state[item.id]) paidAmt += item.amount;
+  }));
+
+  const pendingAmt = totalAmt - paidAmt;
+  const pct = totalAmt > 0 ? Math.round(paidAmt / totalAmt * 100) : 0;
+
+  document.getElementById('cl-total').textContent = fmt(totalAmt);
+  document.getElementById('cl-paid').textContent = fmt(paidAmt);
+  document.getElementById('cl-pending').textContent = fmt(pendingAmt);
+  document.getElementById('cl-pct').textContent = pct + '% completado';
+  document.getElementById('cl-prog').style.width = pct + '%';
+
+  let html = '';
+  data.sections.forEach(section => {
+    html += `<div class="cl-section">
+      <div class="cl-section-title">${section.title}</div>`;
+    section.items.forEach(item => {
+      const done = !!state[item.id];
+      const urgTag = item.urgent ? '<span class="cl-urgent">URGENTE</span>' : '';
+      const warnTag = item.warn ? '<span class="cl-warn-tag">ATENCIÓN</span>' : '';
+      const color = item.urgent ? 'var(--red)' : (item.warn ? 'var(--amber)' : 'var(--green)');
+      html += `
+        <div class="cl-item ${done ? 'done' : ''}" onclick="toggleItem('${item.id}')">
+          <div class="cl-cb"><span class="cl-check">✓</span></div>
+          <div style="flex:1">
+            <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">
+              <span class="cl-concept">${item.concept}</span>
+              ${urgTag}${warnTag}
+            </div>
+            <div class="cl-detail">${item.detail}</div>
+          </div>
+          <div class="cl-amt" style="color:${done ? 'var(--green)' : color}">${fmt(item.amount)}</div>
+        </div>`;
+    });
+    html += '</div>';
+  });
+
+  listEl.innerHTML = html;
+}
+
+function fmt(n) {
+  return '$' + Math.round(n).toLocaleString('es-AR');
+}
+
+// Inicialización
+document.addEventListener('DOMContentLoaded', () => {
+  // No renderizamos hasta que el usuario abra el panel
+});
+</script>
+</body>
+</html>
