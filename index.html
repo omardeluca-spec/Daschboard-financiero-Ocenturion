@@ -211,33 +211,39 @@ let state = {
 };
 function emptyForm(){ return {fecha:today(),tipo:"gasto",seccion:"vivienda",descripcion:"",monto:"",pagado:false,moneda:"ARS"}; }
 
-// ── Capa de datos (stale-while-revalidate) ────────────────────────
+// ── Capa de datos — todo via GET para evitar CORS con Apps Script ─
 function lsGet(){ try{ return JSON.parse(localStorage.getItem(LS_KEY)||"[]"); }catch(e){ return []; } }
 function lsSave(arr){ try{ localStorage.setItem(LS_KEY, JSON.stringify(arr)); }catch(e){} }
 
-function dbLoad(cb){
-  // 1) Servir caché de inmediato (evita pantalla en blanco al refrescar)
-  const cached = lsGet();
-  if(cached.length > 0) cb(cached);
-
-  if(!USE_API){ if(cached.length===0) cb([]); return; }
-
-  // 2) Buscar datos frescos en background
-  state.syncStatus = "loading"; render();
-  fetch(APPS_SCRIPT_URL + "?t=" + Date.now())
+function apiGet(params) {
+  const qs = new URLSearchParams({...params, t: Date.now()}).toString();
+  return fetch(APPS_SCRIPT_URL + "?" + qs)
     .then(r => r.text())
     .then(text => {
-      const data = JSON.parse(text);
-      if(!Array.isArray(data)) throw new Error("Respuesta inválida");
-      lsSave(data);                    // actualizar caché local
+      try { return JSON.parse(text); }
+      catch(e) { console.error("API parse error:", text.slice(0,300)); throw e; }
+    });
+}
+
+function dbLoad(cb){
+  // 1) Caché local inmediata (evita pantalla en blanco al refrescar)
+  const cached = lsGet();
+  if(cached.length > 0){ state.entries = cached; }
+
+  if(!USE_API){ cb(cached); return; }
+
+  state.syncStatus = "loading"; render();
+  apiGet({action:"getAll"})
+    .then(data => {
+      if(!Array.isArray(data)) throw new Error("Respuesta inválida: " + JSON.stringify(data).slice(0,100));
+      lsSave(data);
       state.syncStatus = "ok";
       cb(data);
     })
     .catch(err => {
       console.error("dbLoad:", err);
       state.syncStatus = "err";
-      if(cached.length === 0) cb([]);
-      else render();                   // mostrar status de error pero mantener datos
+      cb(cached);
     });
 }
 
@@ -246,7 +252,8 @@ function dbAdd(entry){
   lsSave(state.entries);
   render();
   if(!USE_API) return;
-  fetch(APPS_SCRIPT_URL, {method:"POST", body:JSON.stringify({action:"add", entry})})
+  apiGet({action:"add", data: JSON.stringify(entry)})
+    .then(r => { if(!r.ok) console.error("dbAdd respuesta:", r); })
     .catch(err => console.error("dbAdd:", err));
 }
 
@@ -256,7 +263,7 @@ function dbUpdate(id, changes){
   render();
   if(!USE_API) return;
   const entry = state.entries.find(e => e.id===id);
-  fetch(APPS_SCRIPT_URL, {method:"POST", body:JSON.stringify({action:"update", id, entry})})
+  apiGet({action:"update", id, data: JSON.stringify(entry)})
     .catch(err => console.error("dbUpdate:", err));
 }
 
@@ -265,7 +272,7 @@ function dbDelete(id){
   lsSave(state.entries);
   render();
   if(!USE_API) return;
-  fetch(APPS_SCRIPT_URL, {method:"POST", body:JSON.stringify({action:"delete", id})})
+  apiGet({action:"delete", id})
     .catch(err => console.error("dbDelete:", err));
 }
 
