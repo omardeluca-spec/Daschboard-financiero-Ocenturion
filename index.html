@@ -167,7 +167,7 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
 <script>
 // ═══════════════════════════════════════════
 // ⬇️  PEGÁ ACÁ TU URL DE APPS SCRIPT
-const APPS_SCRIPT_URL = "PEGAR-URL-AQUI";
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyHZ_gD-HDDD_8Iph927QILUi3hXFF_jBjHL3uAtPUWhOgLXiWa_N-rdxr8s8dW3YfY/exec";
 // ═══════════════════════════════════════════
 
 const USE_API = APPS_SCRIPT_URL !== "PEGAR-URL-AQUI";
@@ -192,6 +192,9 @@ const SECCIONES = [
   {key:"tarjetas",        label:"Tarjetas",               icon:"💳"},
   {key:"prestamos",       label:"Préstamos",              icon:"📋"},
   {key:"mercadopago",     label:"Mercado Pago",           icon:"🛍️"},
+  {key:"titi_ser_y_sentir", label:"Titi Ser y Sentir",      icon:"🌿"},
+  {key:"miqueas",           label:"Miqueas",                icon:"👤"},
+  {key:"ingreso_extra",     label:"Ingreso Extra",          icon:"💵", esIngreso:true},
 ];
 
 const fmt  = n => new Intl.NumberFormat("es-AR",{style:"currency",currency:"ARS",maximumFractionDigits:0}).format(n);
