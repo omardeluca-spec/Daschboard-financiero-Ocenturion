@@ -84,6 +84,18 @@ button{cursor:pointer}
 .tile-green{background:var(--green-bg);border-color:#4ADE8025;color:var(--green)}
 .usd-note{font-size:11px;color:var(--muted);background:var(--card);border:1px solid var(--border);border-radius:10px;padding:7px 12px;margin-bottom:8px;display:flex;align-items:center;gap:6px}
 
+/* ── DASHBOARD EXTRA ── */
+.eye-btn{background:none;border:none;color:var(--muted2);font-size:14px;margin-left:6px;padding:2px 4px;vertical-align:middle;cursor:pointer}
+.dashboard-block{background:var(--card);border:1px solid var(--border);border-radius:13px;margin-top:8px;padding:11px 12px}
+.dashboard-block-hdr{display:flex;align-items:center;justify-content:space-between;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--text);margin-bottom:8px}
+.dashboard-block-sub{font-size:9px;color:var(--muted);font-weight:600;text-transform:none;letter-spacing:0}
+.income-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 0;border-top:1px solid #111;font-size:11px}
+.income-name{display:flex;align-items:center;gap:7px;color:var(--muted2);min-width:0}.income-name span{font-size:13px}.income-row strong{color:var(--green);font-size:12px;white-space:nowrap}
+.savings-block{border-color:#FFD60A25;background:linear-gradient(180deg,#1A1A1A,#171711)}
+.save-line{padding:5px 0 8px}.save-line+.save-line{border-top:1px solid #25251B;padding-top:9px}
+.save-head,.save-foot{display:flex;align-items:center;justify-content:space-between;font-size:10px}.save-head{color:var(--text);font-weight:700}.save-head strong{color:var(--amber);font-size:12px}.save-foot{color:var(--muted);margin-top:4px}
+.progress{height:6px;background:#292919;border-radius:99px;overflow:hidden;margin-top:6px}.progress span{display:block;height:100%;background:var(--amber);border-radius:99px;transition:width .25s}
+
 /* ── SECTIONS ── */
 .sections{padding:0 18px 100px}
 .sec-cards-grid{display:grid;gap:8px}
@@ -102,7 +114,7 @@ button{cursor:pointer}
 .chk.on::after{content:'✓';font-size:11px;color:#111;font-weight:800}
 .entry-info{flex:1;min-width:0;cursor:pointer}
 .entry-desc{font-size:13px;font-weight:500;color:#C5C5C5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.entry-desc.s{color:var(--muted);text-decoration:line-through}
+.entry-desc.s{color:#C5C5C5;text-decoration:none}
 .entry-date{font-size:10px;color:var(--muted);margin-top:1px}
 .entry-amt{font-size:13px;font-weight:700;flex-shrink:0}
 .amt-i{color:var(--green)}.amt-g{color:var(--red)}.amt-p{color:#404040}
@@ -167,38 +179,38 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
 <script>
 // ═══════════════════════════════════════════
 // ⬇️  PEGÁ ACÁ TU URL DE APPS SCRIPT
-const APPS_SCRIPT_URL = "PEGAR-URL-AQUI";
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw_RrWKcIupDD_zKqGaVZoqW6uSFjuC3f3ubpDydOkHRABsWNWkrZObYa-Tlg2dPTKO/exec";
 // ═══════════════════════════════════════════
 
-const USE_API = APPS_SCRIPT_URL !== "PEGAR-URL-AQUI";
+const USE_API = Boolean(APPS_SCRIPT_URL && APPS_SCRIPT_URL.includes("/macros/s/") && APPS_SCRIPT_URL.endsWith("/exec"));
 
 const MESES     = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
 const MESES_ABR = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
 const SECCIONES = [
-  {key:"ingresos",        label:"Ingresos",              icon:"💰", esIngreso:true},
+  {key:"ingresos",        label:"Otros Ingresos",          icon:"💰", esIngreso:true},
   {key:"vivienda",        label:"Vivienda",               icon:"🏠"},
   {key:"servicios",       label:"Servicios",              icon:"⚡"},
-  {key:"alimentacion",    label:"Almacén y Súper",          icon:"🛒"},
+  {key:"alimentacion",    label:"Almacén y Súper",         icon:"🛒"},
   {key:"delivery",        label:"Delivery",               icon:"🛵"},
   {key:"paseos",          label:"Paseos y Restaurantes",  icon:"🍽️"},
   {key:"transporte",      label:"Transporte",             icon:"🚗"},
   {key:"automoto",        label:"Gastos Auto / Moto",     icon:"🔧"},
   {key:"combustible",     label:"Combustible",            icon:"⛽"},
   {key:"salud",           label:"Salud",                  icon:"❤️"},
-  {key:"suscripciones",   label:"Suscripciones",          icon:"📺"},
   {key:"farmacia",        label:"Farmacia y Medicamentos", icon:"💊"},
-  {key:"cuotas_personales",label:"Cuotas Personales",       icon:"🎓"},
-  {key:"gastos_varios",   label:"Gastos Varios",            icon:"🧾"},
+  {key:"suscripciones",   label:"Suscripciones",          icon:"📺"},
   {key:"ropa",            label:"Ropa",                   icon:"👕"},
+  {key:"cuotas_personales", label:"Cuotas Personales",      icon:"🎓"},
+  {key:"gastos_varios",     label:"Gastos Varios",           icon:"🧾"},
   {key:"hormiga",         label:"Gastos Hormiga",         icon:"🐜"},
   {key:"ahorro",          label:"Ahorro / Inversión",     icon:"🏦"},
   {key:"tarjetas",        label:"Tarjetas",               icon:"💳"},
   {key:"prestamos",       label:"Préstamos",              icon:"📋"},
   {key:"mercadopago",     label:"Mercado Pago",           icon:"🛍️"},
-  {key:"titi_ser_y_sentir", label:"Titi Ser y Sentir",      icon:"🌿", esIngreso:true},
-  {key:"miqueas",           label:"Miqueas",                icon:"👤", esIngreso:true},
-  {key:"salario_omar",      label:"Salario Omar",             icon:"💼", esIngreso:true},
+  {key:"titi_ser_y_sentir", label:"Titi Ser y Sentir",      icon:"🌿"},
+  {key:"miqueas",           label:"Miqueas",                icon:"👤"},
   {key:"ingreso_extra",     label:"Ingreso Extra",          icon:"💵", esIngreso:true},
+  {key:"salario_omar",       label:"Salario Omar",            icon:"💼", esIngreso:true},
 ];
 
 const fmt  = n => new Intl.NumberFormat("es-AR",{style:"currency",currency:"ARS",maximumFractionDigits:0}).format(n);
@@ -214,7 +226,7 @@ let state = {
   mes:now.getMonth(), anio:now.getFullYear(),
   entries:[], collapsed:{},
   showModal:false, showConfirm:null, editId:null,
-  form:emptyForm(), syncStatus: USE_API?"loading":"local", lastSync:null,
+  form:emptyForm(), syncStatus: USE_API?"loading":"local", lastSync:null, hideAmounts:localStorage.getItem("gastos-hide-amounts")==="1",
 };
 function emptyForm(){ return {fecha:today(),tipo:"gasto",seccion:"vivienda",descripcion:"",monto:"",pagado:false,moneda:"ARS"}; }
 
@@ -223,14 +235,61 @@ const SYNC_INTERVAL_MS=10000; let syncTimer=null, mutationInFlight=0;
 function lsGet(){try{return JSON.parse(localStorage.getItem(LS_KEY)||'[]')}catch(e){return[]}}
 function lsSave(a){try{localStorage.setItem(LS_KEY,JSON.stringify(a))}catch(e){}}
 function apiGet(params){const qs=new URLSearchParams({...params,t:Date.now()}).toString();return fetch(APPS_SCRIPT_URL+'?'+qs,{method:'GET',cache:'no-store',credentials:'omit'}).then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.text()}).then(t=>{try{return JSON.parse(t)}catch(e){console.error('API parse error:',t.slice(0,300));throw e}})}
-function setSyncStatus(s){state.syncStatus=s;if(!state.showModal)render()}
-function syncFromSheets(o={}){if(!USE_API)return Promise.resolve(state.entries);if(mutationInFlight>0&&!o.force)return Promise.resolve(state.entries);setSyncStatus('loading');return apiGet({action:'getAll'}).then(data=>{if(!Array.isArray(data))throw new Error('Respuesta inválida');state.entries=data;lsSave(data);state.syncStatus='ok';state.lastSync=new Date();if(!state.showModal)render();return data}).catch(err=>{console.error('syncFromSheets:',err);state.syncStatus='err';if(!state.showModal)render();return state.entries})}
-function startAutoSync(){if(!USE_API)return;if(syncTimer)clearInterval(syncTimer);syncTimer=setInterval(()=>{if(document.visibilityState!=='hidden'&&!state.showModal)syncFromSheets()},SYNC_INTERVAL_MS);document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&!state.showModal)syncFromSheets()})}
+function setSyncStatus(s){
+  state.syncStatus=s;
+  if(state.showModal){
+    const el=document.querySelector(".sb-sync");
+    if(el){
+      const labels={ok:"Sincronizado con Sheets",err:"Error de sincronización · Reintentar",loading:"Sincronizando...",local:"Solo este dispositivo"};
+      const cls={ok:"ok",err:"err",loading:"loading",local:""};
+      const dot=el.querySelector(".sync-dot");
+      const span=el.querySelector("span");
+      if(dot) dot.className="sync-dot "+(cls[s]||"");
+      if(span) span.textContent=labels[s]||"";
+    }
+    return;
+  }
+  render();
+}
+function syncFromSheets(o={}){
+  if(!USE_API) return Promise.resolve(state.entries);
+  if(mutationInFlight>0&&!o.force) return Promise.resolve(state.entries);
+  setSyncStatus("loading");
+  return apiGet({action:"getAll"})
+    .then(data=>{
+      if(!Array.isArray(data)) throw new Error("Respuesta inválida");
+      state.entries=data;
+      lsSave(data);
+      state.syncStatus="ok";
+      state.lastSync=new Date();
+      if(!state.showModal) render();
+      return data;
+    })
+    .catch(err=>{
+      console.error("syncFromSheets:",err);
+      state.syncStatus="err";
+      setSyncStatus("err");
+      return state.entries;
+    });
+}
+function startAutoSync(){if(!USE_API)return;if(syncTimer)clearInterval(syncTimer);syncTimer=setInterval(()=>{if(document.visibilityState!=='hidden')syncFromSheets()},SYNC_INTERVAL_MS);document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')syncFromSheets()})}
 function dbLoad(cb){const cached=lsGet();if(cached.length){state.entries=cached;state.syncStatus=USE_API?'loading':'local';render()}if(!USE_API){cb(cached);return}syncFromSheets().then(data=>{cb(data);startAutoSync()})}
 function withMutation(fn){mutationInFlight++;return Promise.resolve().then(fn).finally(()=>{mutationInFlight=Math.max(0,mutationInFlight-1)})}
 function dbAdd(entry){state.entries=[...state.entries,entry];lsSave(state.entries);render();if(!USE_API)return Promise.resolve({ok:true});return withMutation(()=>{setSyncStatus('loading');return apiGet({action:'add',data:JSON.stringify(entry)}).then(r=>{if(!r||!r.ok)throw new Error('Sheets no confirmó el alta.');return syncFromSheets({force:true})}).catch(err=>{console.error('dbAdd:',err);state.syncStatus='err';render();throw err})})}
 function dbUpdate(id,changes){const previous=state.entries;state.entries=state.entries.map(e=>e.id===id?{...e,...changes}:e);lsSave(state.entries);render();if(!USE_API)return Promise.resolve({ok:true});const entry=state.entries.find(e=>e.id===id);return withMutation(()=>{setSyncStatus('loading');return apiGet({action:'update',id,data:JSON.stringify(entry)}).then(r=>{if(!r||!r.ok)throw new Error('Sheets no confirmó la actualización.');return syncFromSheets({force:true})}).catch(err=>{console.error('dbUpdate:',err);state.entries=previous;lsSave(previous);state.syncStatus='err';render();throw err})})}
 function dbDelete(id){const previous=state.entries;state.entries=state.entries.filter(e=>e.id!==id);lsSave(state.entries);render();if(!USE_API)return Promise.resolve({ok:true});return withMutation(()=>{setSyncStatus('loading');return apiGet({action:'delete',id}).then(r=>{if(!r||!r.ok)throw new Error('Sheets no confirmó la eliminación.');return syncFromSheets({force:true})}).catch(err=>{console.error('dbDelete:',err);state.entries=previous;lsSave(previous);state.syncStatus='err';render();throw err})})}
+
+// ── Privacidad y dashboard ───────────────────────────────────────
+function toggleAmounts(){
+  state.hideAmounts=!state.hideAmounts;
+  try{localStorage.setItem("gastos-hide-amounts",state.hideAmounts?"1":"0")}catch(e){}
+  render();
+}
+function moneyView(value, kind="ars"){
+  if(state.hideAmounts) return "••••••";
+  return kind==="usd" ? fmtUSD(value) : fmtS(value);
+}
+function percentView(p){ return state.hideAmounts ? "••%" : Math.round(p)+"%"; }
 
 // ── Computed ─────────────────────────────────────────────────────
 function monthEntries(){
@@ -264,24 +323,27 @@ function ring(pct,color,size=74,stroke=6){
     <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="#1A1A1A" stroke-width="${stroke}"/>
     <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="${color}" stroke-width="${stroke}"
       stroke-dasharray="${d} ${c}" stroke-linecap="round"/></svg>
-    <div class="ring-center"><span style="font-size:12px;font-weight:800;color:${color}">${Math.round(pct)}%</span></div></div>`;
+    <div class="ring-center"><span style="font-size:12px;font-weight:800;color:${color}">${percentView(pct)}</span></div></div>`;
 }
 
 // ── Modal helpers ────────────────────────────────────────────────
 function overlayClick(e,action){ if(e.target===e.currentTarget) dispatch(action); }
 
 function syncFormFromDOM(){
+  if(!state.showModal) return;
   const g=id=>document.getElementById(id);
   if(g("f-desc"))  state.form.descripcion = g("f-desc").value;
   if(g("f-monto")) state.form.monto       = g("f-monto").value;
   if(g("f-fecha")) state.form.fecha       = g("f-fecha").value;
-  if(g("f-sec"))   state.form.seccion     = g("f-sec").value;
+  if(g("f-sec"))   state.form.seccion       = g("f-sec").value;
 }
 
 function setTipo(t){
   syncFormFromDOM();
-  state.form.tipo    = t;
-  state.form.seccion = t==="ingreso"?"ingresos":(state.form.seccion==="ingresos"?"vivienda":state.form.seccion);
+  state.form.tipo = t;
+  const currentSec = SECCIONES.find(s=>s.key===state.form.seccion);
+  if(t==="ingreso" && !currentSec?.esIngreso) state.form.seccion="salario_omar";
+  if(t==="gasto" && currentSec?.esIngreso) state.form.seccion="vivienda";
   render();
 }
 
@@ -319,6 +381,8 @@ function submitForm(){
 
 // ── Render ────────────────────────────────────────────────────────
 function render(){
+  // Antes de reconstruir el DOM, preservamos lo que el usuario ya escribió en el modal.
+  syncFormFromDOM();
   const me        = monthEntries();
   const meARS     = me.filter(e=>(e.moneda||"ARS")==="ARS");
   const meUSD     = me.filter(e=>e.moneda==="USD");
@@ -335,6 +399,20 @@ function render(){
   const hasUSD    = meUSD.length>0;
   const ingUSD    = meUSD.filter(e=>e.tipo==="ingreso").reduce((s,e)=>s+Number(e.monto),0);
   const gastUSD   = meUSD.filter(e=>e.tipo==="gasto").reduce((s,e)=>s+Number(e.monto),0);
+  const incomeSources=[
+    {key:"titi_ser_y_sentir",label:"Titi Ser y Sentir",icon:"🌿"},
+    {key:"miqueas",label:"Miqueas",icon:"👤"},
+    {key:"salario_omar",label:"Salario Omar",icon:"💼"},
+    {key:"ingreso_extra",label:"Ingreso Extra",icon:"💵"}
+  ];
+  const incomeTotals=incomeSources.map(src=>({
+    ...src,
+    total:meARS.filter(e=>e.tipo==="ingreso"&&e.seccion===src.key).reduce((s,e)=>s+Number(e.monto),0)
+  }));
+  const ahorroARS=meARS.filter(e=>e.seccion==="ahorro"&&e.tipo==="gasto").reduce((s,e)=>s+Number(e.monto),0);
+  const ahorroUSD=meUSD.filter(e=>e.seccion==="ahorro"&&e.tipo==="gasto").reduce((s,e)=>s+Number(e.monto),0);
+  const ahorroArsPct=Math.min(ahorroARS/200000*100,100);
+  const ahorroUsdPct=Math.min(ahorroUSD/200*100,100);
 
   const byS={};
   SECCIONES.forEach(s=>{ byS[s.key]=me.filter(e=>e.seccion===s.key).sort((a,b)=>new Date(a.fecha)-new Date(b.fecha)); });
@@ -345,48 +423,42 @@ function render(){
   const syncLabel={ok:"Sincronizado con Sheets"+lastSyncTxt,err:"Error de sincronización · Reintentar",loading:"Sincronizando...",local:"Solo este dispositivo"}[state.syncStatus]||"";
   const syncCls={ok:"ok",err:"err",loading:"loading",local:""}[state.syncStatus]||"";
 
-  const usdNote = hasUSD?`<div class="usd-note">💵 Movimientos USD: <strong style="color:#34D399">+${fmtUSD(ingUSD)}</strong> &nbsp;/&nbsp; <strong style="color:#FF6B7A">-${fmtUSD(gastUSD)}</strong></div>`:"";
+  const usdNote = hasUSD?`<div class="usd-note">💵 Movimientos USD: <strong style="color:#34D399">+${moneyView(ingUSD,"usd")}</strong> &nbsp;/&nbsp; <strong style="color:#FF6B7A">-${moneyView(gastUSD,"usd")}</strong></div>`:"";
 
-  const incomeSections = [
-    {key:"titi_ser_y_sentir", label:"Titi Ser y Sentir", icon:"🌿"},
-    {key:"miqueas", label:"Miqueas", icon:"👤"},
-    {key:"salario_omar", label:"Salario Omar", icon:"💼"},
-    {key:"ingreso_extra", label:"Ingreso Extra", icon:"💵"}
-  ];
-  const incomeBreakdown = incomeSections.map(x=>{
-    const total = meARS.filter(e=>e.seccion===x.key && e.tipo==="ingreso").reduce((s,e)=>s+Number(e.monto),0);
-    return `<div class="income-line"><span>${x.icon} ${x.label}</span><strong style="color:var(--green)">${fmtS(total)}</strong></div>`;
-  }).join("");
+  const incomeBreakdown=`
+    <div class="dashboard-block income-block">
+      <div class="dashboard-block-hdr"><span>💰 Ingresos del mes</span><span class="dashboard-block-sub">por origen</span></div>
+      ${incomeTotals.map(x=>`<div class="income-row"><span class="income-name"><span>${x.icon}</span>${x.label}</span><strong>${moneyView(x.total)}</strong></div>`).join("")}
+    </div>`;
+
+  const savingsBlock=`
+    <div class="dashboard-block savings-block">
+      <div class="dashboard-block-hdr"><span>🏦 Ahorro / Inversión</span><span class="dashboard-block-sub">objetivo mensual</span></div>
+      <div class="save-line"><div class="save-head"><span>🇦🇷 Pesos</span><strong>${moneyView(ahorroARS)}</strong></div><div class="progress"><span style="width:${ahorroArsPct}%"></span></div><div class="save-foot"><span>Meta mensual</span><span>${moneyView(200000)}</span></div></div>
+      <div class="save-line"><div class="save-head"><span>🇺🇸 Dólares</span><strong>${moneyView(ahorroUSD,"usd")}</strong></div><div class="progress"><span style="width:${ahorroUsdPct}%"></span></div><div class="save-foot"><span>Meta mensual</span><span>${moneyView(200,"usd")}</span></div></div>
+    </div>`;
 
   const summaryBlock=`
     <div class="balance-wrap">
       ${ring(pct,ringClr)}
       <div class="bal-info">
-        <div class="lbl">Balance ${MESES[state.mes]}</div>
-        <div class="val" style="color:${balClr}">${fmtS(balance)}</div>
+        <div class="lbl">Balance ${MESES[state.mes]} <button class="eye-btn" title="${state.hideAmounts?"Mostrar importes":"Ocultar importes"}" onclick="event.stopPropagation();toggleAmounts()">${state.hideAmounts?"🙈":"👁️"}</button></div>
+        <div class="val" style="color:${balClr}">${moneyView(balance)}</div>
         <div class="sub">${me.length} movimiento${me.length!==1?"s":""}</div>
       </div>
     </div>
     <div class="summary-grid" style="margin-bottom:8px">
-      <div class="s-card"><div class="s-lbl">Ingresos</div><div class="s-val" style="color:var(--green)">${fmtS(ingresos)}</div></div>
-      <div class="s-card"><div class="s-lbl">Egresos</div><div class="s-val" style="color:var(--red)">${fmtS(gastos)}</div></div>
+      <div class="s-card"><div class="s-lbl">Ingresos</div><div class="s-val" style="color:var(--green)">${moneyView(ingresos)}</div></div>
+      <div class="s-card"><div class="s-lbl">Egresos</div><div class="s-val" style="color:var(--red)">${moneyView(gastos)}</div></div>
       <div class="s-card"><div class="s-lbl">Mov.</div><div class="s-val" style="color:var(--amber)">${me.length}</div></div>
-    </div>
-    <div class="income-breakdown">
-      <div class="income-title">Ingresos por persona / fuente</div>
-      ${incomeBreakdown}
     </div>
     ${usdNote}
     <div class="big-tiles">
-      <div class="big-tile tile-red">
-        <span class="tile-icon">🔴</span>
-        <div><div class="tile-lbl">Por Pagar</div><div class="tile-val">${fmtS(pendiente)}</div><div class="tile-sub">${cntPend} ítem${cntPend!==1?"s":""}</div></div>
-      </div>
-      <div class="big-tile tile-green">
-        <span class="tile-icon">🟢</span>
-        <div><div class="tile-lbl">Pagado</div><div class="tile-val">${fmtS(pagado)}</div><div class="tile-sub">${cntPag} ítem${cntPag!==1?"s":""}</div></div>
-      </div>
-    </div>`;
+      <div class="big-tile tile-red"><span class="tile-icon">🔴</span><div><div class="tile-lbl">Por Pagar</div><div class="tile-val">${moneyView(pendiente)}</div><div class="tile-sub">${cntPend} ítem${cntPend!==1?"s":""}</div></div></div>
+      <div class="big-tile tile-green"><span class="tile-icon">🟢</span><div><div class="tile-lbl">Pagado</div><div class="tile-val">${moneyView(pagado)}</div><div class="tile-sub">${cntPag} ítem${cntPag!==1?"s":""}</div></div></div>
+    </div>
+    ${incomeBreakdown}
+    ${savingsBlock}`;
 
   const stripH=MESES_ABR.map((m,i)=>`<button class="pill${i===state.mes?" active":""}" onclick="dispatch('SET_MES',${i})">${m}</button>`).join("");
   const stripV=`<div class="months-grid">${MESES_ABR.map((m,i)=>`<button class="pill${i===state.mes?" active":""}" onclick="dispatch('SET_MES',${i})">${m}</button>`).join("")}</div>`;
