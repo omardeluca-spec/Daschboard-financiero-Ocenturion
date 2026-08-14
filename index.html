@@ -182,7 +182,8 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
 const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw_RrWKcIupDD_zKqGaVZoqW6uSFjuC3f3ubpDydOkHRABsWNWkrZObYa-Tlg2dPTKO/exec";
 // ═══════════════════════════════════════════
 
-const USE_API = Boolean(APPS_SCRIPT_URL && APPS_SCRIPT_URL.includes("/macros/s/") && APPS_SCRIPT_URL.endsWith("/exec"));
+const IS_LOCAL_PREVIEW = location.protocol === "file:";
+const USE_API = !IS_LOCAL_PREVIEW && Boolean(APPS_SCRIPT_URL && APPS_SCRIPT_URL.includes("/macros/s/") && APPS_SCRIPT_URL.endsWith("/exec"));
 
 const MESES     = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
 const MESES_ABR = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
@@ -207,8 +208,8 @@ const SECCIONES = [
   {key:"tarjetas",        label:"Tarjetas",               icon:"💳"},
   {key:"prestamos",       label:"Préstamos",              icon:"📋"},
   {key:"mercadopago",     label:"Mercado Pago",           icon:"🛍️"},
-  {key:"titi_ser_y_sentir", label:"Titi Ser y Sentir",      icon:"🌿"},
-  {key:"miqueas",           label:"Miqueas",                icon:"👤"},
+  {key:"titi_ser_y_sentir", label:"Titi Ser y Sentir",      icon:"🌿", esIngreso:true},
+  {key:"miqueas",           label:"Miqueas",                icon:"👤", esIngreso:true},
   {key:"ingreso_extra",     label:"Ingreso Extra",          icon:"💵", esIngreso:true},
   {key:"salario_omar",       label:"Salario Omar",            icon:"💼", esIngreso:true},
 ];
@@ -226,7 +227,7 @@ let state = {
   mes:now.getMonth(), anio:now.getFullYear(),
   entries:[], collapsed:{},
   showModal:false, showConfirm:null, editId:null,
-  form:emptyForm(), syncStatus: USE_API?"loading":"local", lastSync:null, hideAmounts:localStorage.getItem("gastos-hide-amounts")==="1",
+  form:emptyForm(), syncStatus: USE_API?"loading":(IS_LOCAL_PREVIEW?"local":"err"), lastSync:null, hideAmounts:localStorage.getItem("gastos-hide-amounts")==="1",
 };
 function emptyForm(){ return {fecha:today(),tipo:"gasto",seccion:"vivienda",descripcion:"",monto:"",pagado:false,moneda:"ARS"}; }
 
@@ -400,8 +401,8 @@ function render(){
   const ingUSD    = meUSD.filter(e=>e.tipo==="ingreso").reduce((s,e)=>s+Number(e.monto),0);
   const gastUSD   = meUSD.filter(e=>e.tipo==="gasto").reduce((s,e)=>s+Number(e.monto),0);
   const incomeSources=[
-    {key:"titi_ser_y_sentir",label:"Titi Ser y Sentir",icon:"🌿"},
-    {key:"miqueas",label:"Miqueas",icon:"👤"},
+    {key:"titi_ser_y_sentir",label:"Titi Ser y Sentir",icon:"🌿",esIngreso:true},
+    {key:"miqueas",label:"Miqueas",icon:"👤",esIngreso:true},
     {key:"salario_omar",label:"Salario Omar",icon:"💼"},
     {key:"ingreso_extra",label:"Ingreso Extra",icon:"💵"}
   ];
