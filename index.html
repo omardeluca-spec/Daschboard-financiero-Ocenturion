@@ -6,6 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>💰 Mis Gastos</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💰</text></svg>">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 :root{
@@ -114,10 +115,10 @@ button{cursor:pointer}
 .chk.on::after{content:'✓';font-size:11px;color:#111;font-weight:800}
 .entry-info{flex:1;min-width:0;cursor:pointer}
 .entry-desc{font-size:13px;font-weight:500;color:#C5C5C5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.entry-desc.s{color:#C5C5C5;text-decoration:none}
-.entry-date{font-size:10px;color:var(--muted);margin-top:1px}
-.entry-amt{font-size:13px;font-weight:700;flex-shrink:0}
-.amt-i{color:var(--green)}.amt-g{color:var(--red)}.amt-p{color:#404040}
+.entry-desc.s{color:#B0B0B0;text-decoration:none}
+.entry-date{font-size:11px;color:#7A7A7A;margin-top:2px;font-weight:500}
+.entry-amt{font-size:14px;font-weight:700;flex-shrink:0}
+.amt-i{color:var(--green)}.amt-g{color:var(--red)}.amt-p{color:#888888}
 .del-btn{background:none;border:none;color:#2E2E2E;font-size:17px;padding:0 4px;line-height:1;transition:color .15s}
 .del-btn:hover{color:var(--red)}
 .empty{text-align:center;padding:50px 20px}
@@ -292,6 +293,24 @@ function moneyView(value, kind="ars"){
 }
 function percentView(p){ return state.hideAmounts ? "••%" : Math.round(p)+"%"; }
 
+// ── Metas de ahorro editables ──────────────────────────────────
+function getSavingsGoals(){
+  try{ return JSON.parse(localStorage.getItem("gastos-goals")||'{"ars":200000,"usd":200}'); }
+  catch(e){ return {ars:200000,usd:200}; }
+}
+function editGoal(kind){
+  const g=getSavingsGoals();
+  const cur=kind==="ars"?g.ars:g.usd;
+  const sym=kind==="ars"?"$":"USD";
+  const val=prompt(`Meta mensual de ahorro en ${sym.toUpperCase()}:`, cur);
+  if(val===null||val.trim()==="") return;
+  const num=Number(val.replace(/\./g,"").replace(",","."));
+  if(isNaN(num)||num<0) return alert("Ingresá un número válido");
+  g[kind]=num;
+  try{localStorage.setItem("gastos-goals",JSON.stringify(g));}catch(e){}
+  render();
+}
+
 // ── Computed ─────────────────────────────────────────────────────
 function monthEntries(){
   return state.entries.filter(e=>{
@@ -412,8 +431,9 @@ function render(){
   }));
   const ahorroARS=meARS.filter(e=>e.seccion==="ahorro"&&e.tipo==="gasto").reduce((s,e)=>s+Number(e.monto),0);
   const ahorroUSD=meUSD.filter(e=>e.seccion==="ahorro"&&e.tipo==="gasto").reduce((s,e)=>s+Number(e.monto),0);
-  const ahorroArsPct=Math.min(ahorroARS/200000*100,100);
-  const ahorroUsdPct=Math.min(ahorroUSD/200*100,100);
+  const goals=getSavingsGoals();
+  const ahorroArsPct=Math.min(ahorroARS/goals.ars*100,100);
+  const ahorroUsdPct=Math.min(ahorroUSD/goals.usd*100,100);
 
   const byS={};
   SECCIONES.forEach(s=>{ byS[s.key]=me.filter(e=>e.seccion===s.key).sort((a,b)=>new Date(a.fecha)-new Date(b.fecha)); });
@@ -434,9 +454,9 @@ function render(){
 
   const savingsBlock=`
     <div class="dashboard-block savings-block">
-      <div class="dashboard-block-hdr"><span>🏦 Ahorro / Inversión</span><span class="dashboard-block-sub">objetivo mensual</span></div>
-      <div class="save-line"><div class="save-head"><span>🇦🇷 Pesos</span><strong>${moneyView(ahorroARS)}</strong></div><div class="progress"><span style="width:${ahorroArsPct}%"></span></div><div class="save-foot"><span>Meta mensual</span><span>${moneyView(200000)}</span></div></div>
-      <div class="save-line"><div class="save-head"><span>🇺🇸 Dólares</span><strong>${moneyView(ahorroUSD,"usd")}</strong></div><div class="progress"><span style="width:${ahorroUsdPct}%"></span></div><div class="save-foot"><span>Meta mensual</span><span>${moneyView(200,"usd")}</span></div></div>
+      <div class="dashboard-block-hdr"><span>🏦 Ahorro / Inversión</span><span class="dashboard-block-sub">toca ✏️ para cambiar meta</span></div>
+      <div class="save-line"><div class="save-head"><span>🇦🇷 Pesos</span><strong>${moneyView(ahorroARS)}</strong></div><div class="progress"><span style="width:${ahorroArsPct}%"></span></div><div class="save-foot"><span>Meta <button onclick="editGoal('ars')" style="background:none;border:none;color:var(--muted2);font-size:11px;cursor:pointer;padding:0">✏️</button></span><span>${moneyView(goals.ars)}</span></div></div>
+      <div class="save-line"><div class="save-head"><span>🇺🇸 Dólares</span><strong>${moneyView(ahorroUSD,"usd")}</strong></div><div class="progress"><span style="width:${ahorroUsdPct}%"></span></div><div class="save-foot"><span>Meta <button onclick="editGoal('usd')" style="background:none;border:none;color:var(--muted2);font-size:11px;cursor:pointer;padding:0">✏️</button></span><span>${moneyView(goals.usd,"usd")}</span></div></div>
     </div>`;
 
   const summaryBlock=`
@@ -483,9 +503,7 @@ function render(){
           <div class="entry-desc${e.pagado?" s":""}">${esc(e.descripcion)}${isUSD?' <span style="font-size:10px;background:#34D39920;color:#34D399;padding:1px 5px;border-radius:4px">USD</span>':""}</div>
           <div class="entry-date">${ds}</div>
         </div>
-        <span class="entry-amt ${e.pagado?"amt-p":e.tipo==="ingreso"?"amt-i":"amt-g"}">
-          ${e.tipo==="ingreso"?"+":"-"}${fmtAmt(e)}
-        </span>
+        <span class="entry-amt ${e.tipo==="ingreso"?"amt-i":"amt-g"}" style="${e.pagado?"opacity:0.55":""}">${e.tipo==="ingreso"?"+":"-"}${fmtAmt(e)}</span>
         <button class="del-btn" onclick="event.stopPropagation();dispatch('CONFIRM_DEL','${e.id}')">×</button>
       </div>`;}).join(""):"";
     return `<div class="sec-card">
