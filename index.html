@@ -323,7 +323,7 @@ function normalizeApiRows(data){
 }
 function setSyncStatus(s){
   state.syncStatus=s;
-  if(state.showModal){
+  if(state.showModal || state.showInstallModal){
     const el=document.querySelector(".sb-sync");
     if(el){
       const labels={ok:"Sincronizado con Sheets",err:"Error de sincronización · Reintentar",loading:"Sincronizando...",local:"Solo este dispositivo"};
@@ -386,13 +386,24 @@ function dbAddMany(entries){
   state.entries=[...state.entries,...entries]; lsSave(state.entries);
   if(!state.showModal && !state.showInstallModal) render();
   if(!USE_API)return Promise.resolve({ok:true,count:entries.length});
+
+  const addIndividually=()=>entries.reduce((promise,entry)=>{
+    return promise.then(()=>apiGet({action:'add',data:JSON.stringify(entry)}).then(r=>{
+      if(!r||!r.ok)throw new Error('Sheets no confirmó la cuota '+entry.cuotaNumero+'.');
+      return r;
+    }));
+  },Promise.resolve()).then(()=>({ok:true,count:entries.length,fallback:true}));
+
   return withMutation(()=>{
     setSyncStatus('loading');
     return apiGet({action:'addBatch',data:JSON.stringify(entries)})
       .then(r=>{
-        if(!r||!r.ok)throw new Error('Sheets no confirmó el alta de las cuotas.');
-        return syncFromSheets({force:true}).then(()=>r);
+        if(r&&r.ok) return r;
+        // Compatibilidad con versiones anteriores del Apps Script que no tienen addBatch.
+        console.warn('addBatch no disponible; guardando cuotas mediante add individual.', r);
+        return addIndividually();
       })
+      .then(r=>syncFromSheets({force:true}).then(()=>r))
       .catch(err=>{
         console.error('dbAddMany:',err);
         const ids=new Set(entries.map(e=>String(e.id)));
@@ -401,7 +412,7 @@ function dbAddMany(entries){
         if(!state.showModal&&!state.showInstallModal)render();
         throw err;
       })
-  })
+  });
 }
 function dbUpdate(id,changes){const previous=state.entries;state.entries=state.entries.map(e=>e.id===id?{...e,...changes}:e);lsSave(state.entries);render();if(!USE_API)return Promise.resolve({ok:true});const entry=state.entries.find(e=>e.id===id);return withMutation(()=>{setSyncStatus('loading');return apiGet({action:'update',id,data:JSON.stringify(entry)}).then(r=>{if(!r||!r.ok)throw new Error('Sheets no confirmó la actualización.');return syncFromSheets({force:true})}).catch(err=>{console.error('dbUpdate:',err);state.entries=previous;lsSave(previous);state.syncStatus='err';render();throw err})})}
 function dbDelete(id){const previous=state.entries;state.entries=state.entries.filter(e=>e.id!==id);lsSave(state.entries);render();if(!USE_API)return Promise.resolve({ok:true});return withMutation(()=>{setSyncStatus('loading');return apiGet({action:'delete',id}).then(r=>{if(!r||!r.ok)throw new Error('Sheets no confirmó la eliminación.');return syncFromSheets({force:true})}).catch(err=>{console.error('dbDelete:',err);state.entries=previous;lsSave(previous);state.syncStatus='err';render();throw err})})}
@@ -522,6 +533,7 @@ function syncInstallFormFromDOM(){
   if(g("i-pago")) state.installForm.fechaPago=g("i-pago").value;
 }
 function submitInstallmentPlan(){
+  if(window.__installSaving) return;
   syncInstallFormFromDOM();
   const f={...state.installForm};
   const total=Number(f.montoTotal), n=Math.max(1,Math.min(48,Number(f.cuotas)||1));
@@ -556,12 +568,13 @@ function submitInstallmentPlan(){
       montoTotal:total
     });
   }
+  window.__installSaving=true;
   state.showInstallModal=false;
   state.installForm=emptyInstallForm();
   render();
   dbAddMany(entries)
-    .then(()=>{state.page="cuotas";render();})
-    .catch(()=>alert("No se pudieron guardar las cuotas en Google Sheets. Revisá el estado de sincronización."));
+    .then(()=>{window.__installSaving=false;state.page="cuotas";render();})
+    .catch(()=>{window.__installSaving=false;alert("No se pudieron guardar las cuotas en Google Sheets. Revisá el estado de sincronización.");});
 }
 function installmentEntries(){
   return state.entries.filter(e=>e.planCuotasId || (typeof e.descripcion==="string" && /· Cuota \d+\/\d+$/.test(e.descripcion)));
@@ -624,6 +637,9 @@ function renderInstallments(){
 }
 // ── Render ────────────────────────────────────────────────────────
 function render(){
+  // Preservar lo que el usuario está escribiendo antes de reconstruir el DOM.
+  syncFormFromDOM();
+  syncInstallFormFromDOM();
   // Antes de reconstruir el DOM, preservamos lo que el usuario ya escribió en cualquier modal.
   syncFormFromDOM();
   syncInstallFormFromDOM();
@@ -797,7 +813,7 @@ function render(){
       <label class="field-lbl">Monto total</label><input id="i-total" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0" value="${state.installForm.montoTotal||""}">
       <label class="field-lbl">Cantidad de cuotas (1 a 48)</label><input id="i-cuotas" type="number" min="1" max="48" step="1" value="${state.installForm.cuotas||1}">
       <label class="field-lbl">Primer vencimiento / fecha de pago</label><input id="i-pago" type="date" value="${state.installForm.fechaPago}">
-      <div class="btn-row"><button class="btn-secondary" onclick="dispatch('CLOSE_INSTALL_MODAL')">Cancelar</button><button class="btn-primary" onclick="submitInstallmentPlan()">Crear cuotas</button></div>
+      <div class="btn-row"><button class="btn-secondary" onclick="dispatch('CLOSE_INSTALL_MODAL')">Cancelar</button><button id="install-submit" class="btn-primary" onclick="submitInstallmentPlan()">Crear cuotas</button></div>
     </div></div>`:"";
 
   const confirm=state.showConfirm?`<div class="overlay" onclick="overlayClick(event,'CANCEL_DEL')">
