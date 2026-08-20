@@ -205,7 +205,7 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
 <script>
 // ═══════════════════════════════════════════
 // ⬇️  PEGÁ ACÁ TU URL DE APPS SCRIPT
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw_RrWKcIupDD_zKqGaVZoqW6uSFjuC3f3ubpDydOkHRABsWNWkrZObYa-Tlg2dPTKO/exec";
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyVXRSMgaAR0oyrrf3wDtcyTAFuoW26iuL9XOLTgVSjLk3hx3C_eAfvMNlXXF0pIAvj/exec";
 // ═══════════════════════════════════════════
 
 const IS_LOCAL_PREVIEW = location.protocol === "file:";
@@ -263,7 +263,64 @@ function emptyInstallForm(){ return {fecha:today(),tipo:"compra",servicio:"Banco
 const SYNC_INTERVAL_MS=10000; let syncTimer=null, mutationInFlight=0;
 function lsGet(){try{return JSON.parse(localStorage.getItem(LS_KEY)||'[]')}catch(e){return[]}}
 function lsSave(a){try{localStorage.setItem(LS_KEY,JSON.stringify(a))}catch(e){}}
-function apiGet(params){const qs=new URLSearchParams({...params,t:Date.now()}).toString();return fetch(APPS_SCRIPT_URL+'?'+qs,{method:'GET',cache:'no-store',credentials:'omit'}).then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.text()}).then(t=>{try{return JSON.parse(t)}catch(e){console.error('API parse error:',t.slice(0,300));throw e}})}
+function apiGet(params){
+  const qs=new URLSearchParams({...params,t:Date.now()}).toString();
+  return fetch(APPS_SCRIPT_URL+'?'+qs,{method:'GET',cache:'no-store',credentials:'omit'})
+    .then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.text()})
+    .then(t=>{try{return JSON.parse(t)}catch(e){console.error('API parse error:',t.slice(0,500));throw e}})
+}
+function numValue(v){
+  if(typeof v==='number') return Number.isFinite(v)?v:0;
+  if(v===null||v===undefined||v==='') return 0;
+  let s=String(v).trim().replace(/[$€£\s]/g,'');
+  if(s.includes(',') && s.includes('.')){
+    if(s.lastIndexOf(',')>s.lastIndexOf('.')) s=s.replace(/\./g,'').replace(',','.');
+    else s=s.replace(/,/g,'');
+  }else if(s.includes(',')){
+    const parts=s.split(',');
+    s=parts.length===2 && parts[1].length<=2 ? parts[0].replace(/\./g,'')+'.'+parts[1] : s.replace(/,/g,'');
+  }
+  const n=Number(s);
+  return Number.isFinite(n)?n:0;
+}
+function normalizeEntry(e){
+  if(!e||typeof e!=='object') return null;
+  const x={...e};
+  // Compatibilidad con encabezados/respuestas de distintas versiones del Apps Script.
+  if(x.id==null) x.id=x.ID??x.Id??'';
+  if(x.fecha==null) x.fecha=x.Fecha??'';
+  if(x.tipo==null) x.tipo=x.Tipo??'gasto';
+  if(x.seccion==null) x.seccion=x.Seccion??x.sección??'gastos_varios';
+  if(x.descripcion==null) x.descripcion=x.Descripcion??x.descripción??'';
+  if(x.monto==null) x.monto=x.Monto??x.importe??x.Importe??0;
+  if(x.pagado==null) x.pagado=x.Pagado??false;
+  if(x.moneda==null) x.moneda=x.Moneda??'ARS';
+  if(x.planCuotasId==null) x.planCuotasId=x.planCuotaId??x.PlanCuotasId??'';
+  if(x.planTipo==null) x.planTipo=x.PlanTipo??'';
+  if(x.servicio==null) x.servicio=x.Servicio??'';
+  if(x.descripcionPlan==null) x.descripcionPlan=x.DescripcionPlan??'';
+  if(x.cuotaNumero==null) x.cuotaNumero=x.CuotaNumero??'';
+  if(x.cuotasTotales==null) x.cuotasTotales=x.CuotasTotales??'';
+  if(x.fechaCompra==null) x.fechaCompra=x.FechaCompra??'';
+  if(x.fechaPago==null) x.fechaPago=x.FechaPago??x.fecha??'';
+  if(x.montoTotal==null) x.montoTotal=x.MontoTotal??'';
+  x.monto=numValue(x.monto);
+  if(x.montoTotal!=='') x.montoTotal=numValue(x.montoTotal);
+  const p=String(x.pagado).toLowerCase().trim();
+  x.pagado=(x.pagado===true || p==='true' || p==='si' || p==='sí' || p==='1' || p==='yes');
+  x.moneda=String(x.moneda||'ARS').toUpperCase()==='USD'?'USD':'ARS';
+  return x;
+}
+function normalizeApiRows(data){
+  // Algunas implementaciones devuelven directamente un array y otras lo envuelven.
+  if(Array.isArray(data)) return data.map(normalizeEntry).filter(e=>e&&e.id!=='');
+  if(data && Array.isArray(data.data)) return data.data.map(normalizeEntry).filter(e=>e&&e.id!=='');
+  if(data && Array.isArray(data.rows)) return data.rows.map(normalizeEntry).filter(e=>e&&e.id!=='');
+  if(data && Array.isArray(data.entries)) return data.entries.map(normalizeEntry).filter(e=>e&&e.id!=='');
+  if(data && Array.isArray(data.result)) return data.result.map(normalizeEntry).filter(e=>e&&e.id!=='');
+  if(data && data.ok===false) throw new Error(data.error||'Google Apps Script devolvió un error.');
+  throw new Error('Respuesta de Google Sheets no reconocida.');
+}
 function setSyncStatus(s){
   state.syncStatus=s;
   if(state.showModal){
@@ -285,13 +342,22 @@ function syncFromSheets(o={}){
   if(mutationInFlight>0&&!o.force) return Promise.resolve(state.entries);
   setSyncStatus("loading");
   return apiGet({action:"getAll"})
-    .then(data=>{
-      if(!Array.isArray(data)) throw new Error("Respuesta inválida");
+    .then(raw=>{
+      const data=normalizeApiRows(raw);
+      // Protección fuerte: una respuesta vacía o con importes cero no pisa una
+      // copia local válida. Así una modificación del Apps Script no puede
+      // hacer desaparecer visualmente los importes existentes.
+      const localNonZero=state.entries.some(e=>numValue(e.monto)!==0);
+      const remoteHasRows=data.length>0;
+      const remoteNonZero=data.some(e=>numValue(e.monto)!==0);
+      if(localNonZero && (!remoteHasRows || !remoteNonZero)){
+        throw new Error("Respuesta remota vacía o con importes en cero; se conservaron los datos locales.");
+      }
       state.entries=data;
       lsSave(data);
       state.syncStatus="ok";
       state.lastSync=new Date();
-      if(!state.showModal) render();
+      if(!state.showModal && !state.showInstallModal) render();
       return data;
     })
     .catch(err=>{
@@ -302,9 +368,41 @@ function syncFromSheets(o={}){
     });
 }
 function startAutoSync(){if(!USE_API)return;if(syncTimer)clearInterval(syncTimer);syncTimer=setInterval(()=>{if(document.visibilityState!=='hidden')syncFromSheets()},SYNC_INTERVAL_MS);document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')syncFromSheets()})}
-function dbLoad(cb){const cached=lsGet();if(cached.length){state.entries=cached;state.syncStatus=USE_API?'loading':'local';render()}if(!USE_API){cb(cached);return}syncFromSheets().then(data=>{cb(data);startAutoSync()})}
+function dbLoad(cb){const cached=lsGet().map(normalizeEntry).filter(Boolean);if(cached.length){state.entries=cached;state.syncStatus=USE_API?'loading':'local';render()}if(!USE_API){cb(cached);return}syncFromSheets().then(data=>{cb(data);startAutoSync()})}
 function withMutation(fn){mutationInFlight++;return Promise.resolve().then(fn).finally(()=>{mutationInFlight=Math.max(0,mutationInFlight-1)})}
-function dbAdd(entry){state.entries=[...state.entries,entry];lsSave(state.entries);render();if(!USE_API)return Promise.resolve({ok:true});return withMutation(()=>{setSyncStatus('loading');return apiGet({action:'add',data:JSON.stringify(entry)}).then(r=>{if(!r||!r.ok)throw new Error('Sheets no confirmó el alta.');return syncFromSheets({force:true})}).catch(err=>{console.error('dbAdd:',err);state.syncStatus='err';render();throw err})})}
+function dbAdd(entry){
+  state.entries=[...state.entries,entry]; lsSave(state.entries);
+  if(!state.showModal && !state.showInstallModal) render();
+  if(!USE_API)return Promise.resolve({ok:true});
+  return withMutation(()=>{
+    setSyncStatus('loading');
+    return apiGet({action:'add',data:JSON.stringify(entry)})
+      .then(r=>{if(!r||!r.ok)throw new Error('Sheets no confirmó el alta.');return syncFromSheets({force:true})})
+      .catch(err=>{console.error('dbAdd:',err);state.syncStatus='err';if(!state.showModal&&!state.showInstallModal)render();throw err})
+  })
+}
+function dbAddMany(entries){
+  if(!Array.isArray(entries)||!entries.length)return Promise.resolve({ok:true});
+  state.entries=[...state.entries,...entries]; lsSave(state.entries);
+  if(!state.showModal && !state.showInstallModal) render();
+  if(!USE_API)return Promise.resolve({ok:true,count:entries.length});
+  return withMutation(()=>{
+    setSyncStatus('loading');
+    return apiGet({action:'addBatch',data:JSON.stringify(entries)})
+      .then(r=>{
+        if(!r||!r.ok)throw new Error('Sheets no confirmó el alta de las cuotas.');
+        return syncFromSheets({force:true}).then(()=>r);
+      })
+      .catch(err=>{
+        console.error('dbAddMany:',err);
+        const ids=new Set(entries.map(e=>String(e.id)));
+        state.entries=state.entries.filter(e=>!ids.has(String(e.id)));
+        lsSave(state.entries); state.syncStatus='err';
+        if(!state.showModal&&!state.showInstallModal)render();
+        throw err;
+      })
+  })
+}
 function dbUpdate(id,changes){const previous=state.entries;state.entries=state.entries.map(e=>e.id===id?{...e,...changes}:e);lsSave(state.entries);render();if(!USE_API)return Promise.resolve({ok:true});const entry=state.entries.find(e=>e.id===id);return withMutation(()=>{setSyncStatus('loading');return apiGet({action:'update',id,data:JSON.stringify(entry)}).then(r=>{if(!r||!r.ok)throw new Error('Sheets no confirmó la actualización.');return syncFromSheets({force:true})}).catch(err=>{console.error('dbUpdate:',err);state.entries=previous;lsSave(previous);state.syncStatus='err';render();throw err})})}
 function dbDelete(id){const previous=state.entries;state.entries=state.entries.filter(e=>e.id!==id);lsSave(state.entries);render();if(!USE_API)return Promise.resolve({ok:true});return withMutation(()=>{setSyncStatus('loading');return apiGet({action:'delete',id}).then(r=>{if(!r||!r.ok)throw new Error('Sheets no confirmó la eliminación.');return syncFromSheets({force:true})}).catch(err=>{console.error('dbDelete:',err);state.entries=previous;lsSave(previous);state.syncStatus='err';render();throw err})})}
 
@@ -425,21 +523,26 @@ function syncInstallFormFromDOM(){
 }
 function submitInstallmentPlan(){
   syncInstallFormFromDOM();
-  const f=state.installForm, total=Number(f.montoTotal), n=Math.max(1,Math.min(48,Number(f.cuotas)||1));
+  const f={...state.installForm};
+  const total=Number(f.montoTotal), n=Math.max(1,Math.min(48,Number(f.cuotas)||1));
   if(!f.descripcion.trim() || !total || total<=0){alert("Completá descripción y monto total.");return;}
+  if(!f.fechaPago){alert("Completá la fecha del primer vencimiento.");return;}
   const first=new Date(f.fechaPago+"T00:00:00");
-  const cuota=total/n, planId="PLAN-"+Date.now().toString();
-  const promises=[];
+  if(Number.isNaN(first.getTime())){alert("La fecha de pago no es válida.");return;}
+  const base=Math.floor((total/n)*100)/100;
+  const last=Math.round((total-base*(n-1))*100)/100;
+  const planId="PLAN-"+Date.now().toString()+"-"+Math.random().toString(36).slice(2,7).toUpperCase();
+  const entries=[];
   for(let i=0;i<n;i++){
     const d=new Date(first); d.setMonth(d.getMonth()+i);
     const fecha=d.toISOString().slice(0,10);
-    const entry={
+    entries.push({
       id:planId+"-"+String(i+1).padStart(2,"0"),
       fecha,
       tipo:"gasto",
       seccion:f.tipo==="prestamo"?"prestamos":"tarjetas",
       descripcion:`${f.descripcion.trim()} · Cuota ${i+1}/${n}`,
-      monto:Math.round((i===n-1 ? total-cuota*(n-1) : cuota)*100)/100,
+      monto:i===n-1?last:base,
       pagado:false,
       moneda:f.moneda||"ARS",
       planCuotasId:planId,
@@ -451,11 +554,14 @@ function submitInstallmentPlan(){
       fechaCompra:f.fecha,
       fechaPago:fecha,
       montoTotal:total
-    };
-    promises.push(dbAdd(entry));
+    });
   }
-  state.showInstallModal=false; state.installForm=emptyInstallForm(); render();
-  Promise.all(promises).catch(()=>alert("Algunas cuotas no pudieron sincronizarse con Google Sheets. Revisá el estado de sincronización."));
+  state.showInstallModal=false;
+  state.installForm=emptyInstallForm();
+  render();
+  dbAddMany(entries)
+    .then(()=>{state.page="cuotas";render();})
+    .catch(()=>alert("No se pudieron guardar las cuotas en Google Sheets. Revisá el estado de sincronización."));
 }
 function installmentEntries(){
   return state.entries.filter(e=>e.planCuotasId || (typeof e.descripcion==="string" && /· Cuota \d+\/\d+$/.test(e.descripcion)));
@@ -518,8 +624,9 @@ function renderInstallments(){
 }
 // ── Render ────────────────────────────────────────────────────────
 function render(){
-  // Antes de reconstruir el DOM, preservamos lo que el usuario ya escribió en el modal.
+  // Antes de reconstruir el DOM, preservamos lo que el usuario ya escribió en cualquier modal.
   syncFormFromDOM();
+  syncInstallFormFromDOM();
   const me        = monthEntries();
   const meARS     = me.filter(e=>(e.moneda||"ARS")==="ARS");
   const meUSD     = me.filter(e=>e.moneda==="USD");
