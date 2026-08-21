@@ -630,8 +630,11 @@ function renderAnalytics(me){
   // Las cuotas usan la fecha de vencimiento de cada cuota, por lo que las de este mes
   // ya forman parte de "gastos del mes". Esta sección permite analizarlas sin duplicarlas.
   const monthPlans=installmentEntries().filter(e=>{
-    const d=new Date(e.fecha+"T00:00:00");
-    return d.getMonth()===state.mes && d.getFullYear()===state.anio;
+    // Para cuotas manda la fecha de vencimiento (fechaPago).
+    // Algunas versiones antiguas del Apps Script la guardan en "fecha".
+    const rawDate=e.fechaPago||e.fecha;
+    const d=new Date(String(rawDate||'').slice(0,10)+"T00:00:00");
+    return !Number.isNaN(d.getTime()) && d.getMonth()===state.mes && d.getFullYear()===state.anio;
   });
   const visiblePlans=state.analyticsInstallFilter==="all"?monthPlans:monthPlans.filter(e=>state.analyticsInstallFilter==="paid"?e.pagado:!e.pagado);
   const planPaid=monthPlans.filter(e=>e.pagado);
@@ -688,15 +691,31 @@ function renderAnalytics(me){
     <div class="chart-card" style="padding:12px;margin-top:10px"><h3>Detalle interactivo</h3><div class="install-mini-list">${miniRows||'<span style="color:var(--muted)">No hay cuotas para este filtro.</span>'}</div></div>
   </div>`;
 
+  const gastosARS=gastos.filter(e=>(e.moneda||"ARS")==="ARS");
+  const gastosARSPagados=gastosARS.filter(e=>e.pagado).reduce((s,e)=>s+Number(e.monto),0);
+  const gastosARSPendientes=gastosARS.filter(e=>!e.pagado).reduce((s,e)=>s+Number(e.monto),0);
+  const gastosUSDPagados=gastos.filter(e=>e.moneda==="USD"&&e.pagado).reduce((s,e)=>s+Number(e.monto),0);
+  const gastosUSDPendientes=gastos.filter(e=>e.moneda==="USD"&&!e.pagado).reduce((s,e)=>s+Number(e.monto),0);
+  const paidCount=gastos.filter(e=>e.pagado).length;
+  const pendingCount=gastos.filter(e=>!e.pagado).length;
+  const summaryPaidBlock=`
+    <div class="s-card"><div class="s-lbl">Pagados ARS</div><div class="s-val" style="color:var(--green)">${fmt(gastosARSPagados)}</div>${gastosUSDPagados?`<div style="font-size:9px;color:#34D399;margin-top:2px">${fmtUSD(gastosUSDPagados)}</div>`:""}<div style="font-size:9px;color:var(--muted);margin-top:3px">${paidCount} movimiento${paidCount!==1?'s':''}</div></div>`;
+  const summaryPendingBlock=`
+    <div class="s-card"><div class="s-lbl">Por pagar ARS</div><div class="s-val" style="color:var(--red)">${fmt(gastosARSPendientes)}</div>${gastosUSDPendientes?`<div style="font-size:9px;color:#34D399;margin-top:2px">${fmtUSD(gastosUSDPendientes)}</div>`:""}<div style="font-size:9px;color:var(--muted);margin-top:3px">${pendingCount} movimiento${pendingCount!==1?'s':''}</div></div>`;
+
   return `<div class="page-head"><div><div class="page-title">📊 Gastos del mes</div><div class="page-sub">${MESES[state.mes]} ${state.anio} · ${gastos.length} gastos</div></div></div>
   <div class="chart-grid">
     <div class="chart-card"><h3>Distribución por categoría</h3><div class="pie-wrap">${pie}</div><div class="legend">${legend||'<span style="color:var(--muted)">Sin gastos este mes</span>'}</div></div>
     <div class="chart-card"><h3>Gastos por categoría</h3><div class="bar-list">${bars||'<span style="color:var(--muted)">Sin gastos este mes</span>'}</div></div>
   </div>
-  <div class="dashboard-block" style="margin-top:10px"><div class="dashboard-block-hdr"><span>Resumen</span></div>
-    <div class="summary-grid" style="margin:0"><div class="s-card"><div class="s-lbl">Gastos ARS</div><div class="s-val" style="color:var(--red)">${fmt(gastos.filter(e=>(e.moneda||"ARS")==="ARS").reduce((s,e)=>s+Number(e.monto),0))}</div></div>
-    <div class="s-card"><div class="s-lbl">Gastos USD</div><div class="s-val" style="color:#34D399">${fmtUSD(usd)}</div></div>
-    <div class="s-card"><div class="s-lbl">Categorías</div><div class="s-val" style="color:var(--amber)">${rows.length}</div></div></div>
+  <div class="dashboard-block" style="margin-top:10px"><div class="dashboard-block-hdr"><span>Resumen de gastos</span></div>
+    <div class="summary-grid" style="margin:0">
+      <div class="s-card"><div class="s-lbl">Gastos ARS</div><div class="s-val" style="color:var(--red)">${fmt(gastosARS.reduce((s,e)=>s+Number(e.monto),0))}</div></div>
+      <div class="s-card"><div class="s-lbl">Gastos USD</div><div class="s-val" style="color:#34D399">${fmtUSD(usd)}</div></div>
+      ${summaryPaidBlock}
+      ${summaryPendingBlock}
+      <div class="s-card"><div class="s-lbl">Categorías</div><div class="s-val" style="color:var(--amber)">${rows.length}</div></div>
+    </div>
   </div>${installmentBlock}`;
 }
 function renderInstallments(){
